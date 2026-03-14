@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بيت OS — Bayt Seedat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:     #0d1a0f;
+      --offblack:  #faf8f2;
+      --forest:    #f0ebe0;
+      --green:     #1a3d28;
+      --midgreen:  #245235;
+      --gold:      #c9a84c;
+      --gold-dim:  #9b7d38;
+      --gold-pale: #f0e4c0;
+      --cream:     #faf8f2;
+      --white:     #ffffff;
+      --grey:      #6b7c6e;
+      --rule:      #ddd8cc;
+      --rule-light:#e8e3d8;
+      --sidebar-w: 220px;
+      /* explicit named tokens for clarity */
+      --bg:        #faf8f2;
+      --sidebar-bg:#1a3d28;
+      --sidebar-text: #e8d5a3;
+      --card-bg:   #ffffff;
+      --text-main: #0d1a0f;
+      --text-muted:#6b7c6e;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--bg);
+      color: var(--text-main);
+      line-height: 1.65;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* noise */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      border-right: 1px solid rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 1.6rem 1.4rem 1.2rem;
+      border-bottom: 1px solid var(--rule);
+    }
+    .sidebar-logo .arabic {
+      font-family: 'Amiri', serif;
+      font-size: 1.6rem;
+      color: var(--gold);
+      line-height: 1;
+      display: block;
+    }
+    .sidebar-logo .english {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: rgba(201,168,76,0.7);
+      margin-top: 0.3rem;
+      display: block;
+    }
+    .sidebar-logo .family {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      color: rgba(232,213,163,0.4);
+      margin-top: 0.2rem;
+    }
+
+    .nav-section {
+      padding: 1rem 0;
+    }
+    .nav-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.3em;
+      color: rgba(201,168,76,0.5);
+      padding: 0.4rem 1.4rem 0.3rem;
+      text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.55rem 1.4rem;
+      font-size: 0.82rem;
+      color: rgba(232,213,163,0.6);
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { color: var(--gold-pale); background: rgba(255,255,255,0.07); }
+    .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(255,255,255,0.07); }
+    .nav-item .icon { font-size: 0.9rem; width: 16px; text-align: center; }
+
+    .phase-badge {
+      margin: auto 1.4rem 1.4rem;
+      background: var(--forest);
+      border: 1px solid var(--rule-light);
+      border-radius: 6px;
+      padding: 0.8rem;
+    }
+    .phase-badge .phase-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+    }
+    .phase-badge .phase-name {
+      font-size: 0.85rem;
+      color: var(--gold);
+      font-weight: 600;
+      margin: 0.25rem 0 0.4rem;
+    }
+    .phase-progress-bar {
+      height: 3px;
+      background: var(--rule-light);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .phase-progress-bar .fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 2px;
+      width: 15%;
+      transition: width 0.4s ease;
+    }
+    .phase-days {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.5rem;
+      color: var(--grey);
+      margin-top: 0.3rem;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* topbar */
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--rule);
+      padding: 0.7rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .topbar-date {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+    }
+    .notion-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .notion-badge:hover { border-color: var(--gold-dim); }
+    .notion-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4CAF50;
+      animation: pulse 2s infinite;
+    }
+    .notion-badge span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+    }
+    /* ── CALENDAR EMBED ── */
+    .gcal-embed-wrapper {
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--rule-light);
+      margin-top: 0.8rem;
+    }
+    .gcal-embed-wrapper iframe {
+      display: block;
+      width: 100%;
+      border: none;
+      filter: invert(0.85) hue-rotate(160deg) saturate(0.6) brightness(0.9);
+      border-radius: 6px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      padding: 2rem 2rem 3rem;
+    }
+
+    /* page header */
+    .page-header {
+      margin-bottom: 2rem;
+    }
+    .page-header h1 {
+      font-family: 'Crimson Pro', serif;
+      font-size: 2rem;
+      font-weight: 300;
+      color: var(--white);
+      letter-spacing: 0.02em;
+    }
+    .page-header h1 span {
+      color: var(--gold);
+      font-style: italic;
+    }
+    .page-header p {
+      font-size: 0.9rem;
+      color: var(--grey);
+      margin-top: 0.3rem;
+    }
+
+    /* ── GRID ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .full-width { margin-bottom: 1.2rem; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 1.3rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold) 0%, transparent 100%);
+      opacity: 0.5;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .card-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+    .card-action {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      transition: all 0.15s;
+    }
+    .card-action:hover { color: var(--gold-dim); border-color: var(--gold-dim); }
+
+    /* ── STAT CARDS ── */
+    .stat-card {
+      background: var(--offblack);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 1.1rem 1.3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.2em;
+      color: var(--grey);
+      text-transform: uppercase;
+    }
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 300;
+      color: var(--gold);
+      line-height: 1.1;
+      margin: 0.3rem 0 0.2rem;
+    }
+    .stat-sub {
+      font-size: 0.75rem;
+      color: var(--grey);
+    }
+    .stat-icon {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      font-size: 1.5rem;
+      opacity: 0.15;
+    }
+
+    /* ── FAMILY TREE ── */
+    .family-tree-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 0;
+      gap: 0;
+    }
+
+    .tree-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    .tree-connector-top {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+
+    .tree-member {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .tree-member:hover { transform: translateY(-2px); }
+
+    .member-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--rule-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      position: relative;
+      transition: border-color 0.15s;
+    }
+    .tree-member:hover .member-avatar { border-color: var(--gold); }
+    .member-avatar.dad    { background: linear-gradient(135deg, #1a3d28, #245235); }
+    .member-avatar.mum    { background: linear-gradient(135deg, #2d1a3d, #3d2452); }
+    .member-avatar.child1 { background: linear-gradient(135deg, #1a2d3d, #245250); }
+    .member-avatar.child2 { background: linear-gradient(135deg, #3d2d1a, #524224); }
+    .member-avatar.child3 { background: linear-gradient(135deg, #3d1a2d, #523d3d); }
+    .member-avatar.child4 { background: linear-gradient(135deg, #1a3d1a, #245224); }
+
+    .member-role-dot {
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 1px solid var(--offblack);
+    }
+    .role-dad    { background: var(--gold); }
+    .role-mum    { background: #b084cc; }
+    .role-child  { background: #4a9eca; }
+
+    .member-name {
+      font-size: 0.78rem;
+      color: var(--cream);
+      text-align: center;
+      font-weight: 400;
+    }
+    .member-age {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+    }
+
+    /* SVG lines for tree */
+    .tree-svg {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+    }
+
+    .tree-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    /* Parents connected by line */
+    .parents-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+    .couple-line {
+      width: 40px; height: 2px;
+      background: var(--gold-dim);
+      opacity: 0.5;
+    }
+    .couple-heart {
+      width: 16px; height: 16px;
+      color: var(--gold);
+      font-size: 0.7rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* vertical drop line from parents */
+    .drop-line {
+      width: 2px;
+      height: 28px;
+      background: linear-gradient(to bottom, var(--gold-dim), var(--rule-light));
+      margin: 0 auto;
+      opacity: 0.5;
+    }
+    /* horizontal spread */
+    .spread-line {
+      height: 2px;
+      background: var(--rule-light);
+      position: relative;
+      opacity: 0.5;
+    }
+
+    .children-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      margin-top: 0;
+    }
+    .child-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .child-drop {
+      width: 2px;
+      height: 22px;
+      background: var(--rule-light);
+      opacity: 0.5;
+    }
+
+    /* ── CALENDAR ── */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .cal-month {
+      font-size: 1rem;
+      color: var(--cream);
+      font-weight: 400;
+    }
+    .cal-btn {
+      width: 26px; height: 26px;
+      background: var(--forest);
+      border: 1px solid var(--rule-light);
+      border-radius: 4px;
+      color: var(--grey);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem;
+      transition: all 0.15s;
+    }
+    .cal-btn:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+    .member-filters {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .filter-pill {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid var(--rule-light);
+      color: var(--grey);
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .filter-pill:hover { color: var(--cream); border-color: var(--grey); }
+    .filter-pill.active-dad    { background: rgba(201,168,76,0.15); border-color: var(--gold-dim); color: var(--gold); }
+    .filter-pill.active-mum    { background: rgba(176,132,204,0.15); border-color: #7a5490; color: #b084cc; }
+    .filter-pill.active-yahya  { background: rgba(74,158,202,0.15); border-color: #2a6e8a; color: #4a9eca; }
+    .filter-pill.active-isa    { background: rgba(202,158,74,0.15); border-color: #8a6e2a; color: #ca9e4a; }
+    .filter-pill.active-linah  { background: rgba(202,74,158,0.15); border-color: #8a2a6e; color: #ca4a9e; }
+    .filter-pill.active-dana   { background: rgba(74,202,74,0.15); border-color: #2a8a2a; color: #4aca4a; }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .cal-day-header {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.48rem;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+      text-align: center;
+      padding: 0.3rem 0;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      background: var(--forest);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0.2rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 44px;
+      border: 1px solid transparent;
+    }
+    .cal-day:hover { background: var(--midgreen); border-color: var(--rule-light); }
+    .cal-day.today { border-color: var(--gold-dim); background: rgba(201,168,76,0.08); }
+    .cal-day.other-month { opacity: 0.3; }
+    .cal-day-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--grey);
+      line-height: 1.2;
+    }
+    .cal-day.today .cal-day-num { color: var(--gold); font-weight: 700; }
+    .cal-dot-row {
+      display: flex; gap: 1px; flex-wrap: wrap; justify-content: center;
+      margin-top: 2px;
+    }
+    .cal-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+    }
+    .dot-dad    { background: var(--gold); }
+    .dot-mum    { background: #b084cc; }
+    .dot-yahya  { background: #4a9eca; }
+    .dot-isa    { background: #ca9e4a; }
+    .dot-linah  { background: #ca4a9e; }
+    .dot-dana   { background: #4aca4a; }
+
+    /* events list */
+    .event-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .event-item:last-child { border-bottom: none; }
+    .event-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .event-content { flex: 1; }
+    .event-title { font-size: 0.82rem; color: var(--cream); }
+    .event-meta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.08em;
+      color: var(--grey);
+      margin-top: 0.1rem;
+    }
+
+    /* ── NOTION WORKSPACE ── */
+    .notion-setup {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+    }
+    .notion-page {
+      background: var(--forest);
+      border: 1px solid var(--rule-light);
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .notion-page:hover { border-color: var(--gold-dim); background: var(--midgreen); }
+    .notion-page-icon { font-size: 1.2rem; }
+    .notion-page-name {
+      font-size: 0.8rem;
+      color: var(--cream);
+      font-weight: 400;
+    }
+    .notion-page-desc {
+      font-size: 0.68rem;
+      color: var(--grey);
+      line-height: 1.4;
+    }
+    .notion-status {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.48rem;
+      letter-spacing: 0.1em;
+      margin-top: 0.3rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      width: fit-content;
+    }
+    .status-ready { background: rgba(76,175,80,0.15); color: #4CAF50; border: 1px solid rgba(76,175,80,0.3); }
+    .status-build { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+    .status-soon  { background: rgba(122,140,126,0.1); color: var(--grey); border: 1px solid var(--rule-light); }
+
+    /* ── ROADMAP STRIP ── */
+    .roadmap-phases {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .phase-block {
+      flex: 1;
+      background: var(--forest);
+      border: 1px solid var(--rule-light);
+      border-radius: 6px;
+      padding: 0.7rem 0.8rem;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .phase-block:hover { border-color: var(--gold-dim); }
+    .phase-block.current { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+    .phase-block.done { opacity: 0.5; }
+    .phase-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.48rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+    }
+    .phase-block.current .phase-num { color: var(--gold); }
+    .phase-name-s {
+      font-size: 0.78rem;
+      color: var(--cream);
+      font-weight: 600;
+      margin: 0.15rem 0 0.1rem;
+    }
+    .phase-days-s {
+      font-size: 0.65rem;
+      color: var(--grey);
+    }
+    .phase-who {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.45rem;
+      letter-spacing: 0.08em;
+      color: var(--grey);
+      margin-top: 0.3rem;
+    }
+    .phase-progress {
+      height: 2px;
+      background: var(--rule-light);
+      border-radius: 1px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+    .phase-progress .fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 1px;
+    }
+
+    /* ── QUICK ACTIONS ── */
+    .quick-action {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--forest);
+      border: 1px solid var(--rule-light);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 0.5rem;
+    }
+    .quick-action:last-child { margin-bottom: 0; }
+    .quick-action:hover { border-color: var(--gold-dim); background: var(--midgreen); }
+    .quick-action-icon { font-size: 1rem; width: 24px; text-align: center; }
+    .quick-action-text { flex: 1; }
+    .quick-action-title { font-size: 0.8rem; color: var(--cream); }
+    .quick-action-desc { font-size: 0.65rem; color: var(--grey); }
+    .quick-action-arrow { color: var(--grey); font-size: 0.7rem; }
+    .quick-action:hover .quick-action-arrow { color: var(--gold); }
+
+    /* ── HADITH STRIP ── */
+    .hadith-strip {
+      background: var(--forest);
+      border: 1px solid var(--rule-light);
+      border-top: 1px solid var(--gold-dim);
+      border-radius: 8px;
+      padding: 1.1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .hadith-arabic {
+      font-family: 'Amiri', serif;
+      font-size: 1.1rem;
+      color: var(--gold);
+      line-height: 1.6;
+      text-align: right;
+      min-width: 200px;
+    }
+    .hadith-divider {
+      width: 1px; height: 40px;
+      background: var(--rule-light);
+    }
+    .hadith-text {
+      font-size: 0.82rem;
+      font-style: italic;
+      color: var(--grey);
+      flex: 1;
+    }
+    .hadith-source {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.48rem;
+      letter-spacing: 0.1em;
+      color: var(--gold-dim);
+      margin-top: 0.25rem;
+    }
+
+    /* ── MEMBER CARDS ── */
+    .member-card {
+      background: var(--forest);
+      border: 1px solid var(--rule-light);
+      border-radius: 6px;
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .member-card:hover { border-color: var(--gold-dim); transform: translateY(-1px); }
+    .member-card-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      border: 1.5px solid var(--rule-light);
+    }
+    .member-card-name { font-size: 0.82rem; color: var(--cream); }
+    .member-card-role {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.48rem;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+      margin-top: 0.15rem;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--offblack); }
+    ::-webkit-scrollbar-thumb { background: var(--rule-light); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <span class="arabic">بيت</span>
+    <span class="english">BAYT OS · v0.1</span>
+    <span class="family">Seedat Family · Doha</span>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Core</div>
+    <div class="nav-item active"><span class="icon">🏠</span> Home</div>
+    <div class="nav-item"><span class="icon">👨‍👩‍👧‍👦</span> Family</div>
+    <div class="nav-item"><span class="icon">📅</span> Calendar</div>
+    <div class="nav-item"><span class="icon">📋</span> 40-Day Roadmap</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Build</div>
+    <div class="nav-item"><span class="icon">📖</span> Manifesto</div>
+    <div class="nav-item"><span class="icon">🧠</span> Child Profiles</div>
+    <div class="nav-item"><span class="icon">🕌</span> Deen Tracker</div>
+    <div class="nav-item"><span class="icon">💡</span> Projects</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">System</div>
+    <div class="nav-item"><span class="icon">📁</span> Notion Workspace</div>
+    <div class="nav-item"><span class="icon">⚙️</span> Settings</div>
+  </div>
+
+  <div class="phase-badge">
+    <div class="phase-label">CURRENT PHASE</div>
+    <div class="phase-name">Phase 1 — Foundation</div>
+    <div class="phase-progress-bar"><div class="fill"></div></div>
+    <div class="phase-days">Day 1 of 7 · Full Family</div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- topbar -->
+  <div class="topbar">
+    <div class="topbar-title">BAYT OS — HOME</div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="topbar-date">Tuesday, 10 March 2026</div>
+      <div class="notion-badge" onclick="window.open('https://www.notion.so/0e0bea2f459f479a877fec4e116abb07','_blank')">
+        <div class="dot"></div>
+        <span>NOTION · BAYT SEEDAT OS ↗</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>Ahlan wa sahlan, <span>Muhammad.</span></h1>
+      <p>Bismillah — your family OS is live. Phase 1 begins.</p>
+    </div>
+
+    <!-- Hadith strip -->
+    <div class="hadith-strip">
+      <div>
+        <div class="hadith-arabic">كُلُّكُمْ رَاعٍ وَكُلُّكُمْ مَسْؤُولٌ عَنْ رَعِيَّتِهِ</div>
+      </div>
+      <div class="hadith-divider"></div>
+      <div>
+        <div class="hadith-text">"Each of you is a shepherd, and each of you is responsible for their flock."</div>
+        <div class="hadith-source">— Sahih al-Bukhari 893 · Daily reminder</div>
+      </div>
+    </div>
+
+    <!-- Stat row -->
+    <div class="grid-4">
+      <div class="stat-card">
+        <div class="stat-label">Day</div>
+        <div class="stat-value">01</div>
+        <div class="stat-sub">of 40 · Foundation</div>
+        <div class="stat-icon">🗓️</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Family Members</div>
+        <div class="stat-value">6</div>
+        <div class="stat-sub">2 parents · 4 children</div>
+        <div class="stat-icon">👨‍👩‍👧‍👦</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Next Session</div>
+        <div class="stat-value" style="font-size:1.1rem; padding-top:0.5rem; color:var(--cream)">Tomorrow</div>
+        <div class="stat-sub">Session 01 · Founding</div>
+        <div class="stat-icon">📋</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Notion Pages</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">workspace ready</div>
+        <div class="stat-icon">📁</div>
+      </div>
+    </div>
+
+    <!-- Family Tree + Calendar -->
+    <div class="grid-2">
+
+      <!-- Family Tree -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⬡ Family Tree</div>
+          <div class="card-action">Edit →</div>
+        </div>
+
+        <div class="family-tree-container">
+          <!-- Parents -->
+          <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+            <div class="tree-member">
+              <div class="member-avatar dad">
+                👨
+                <div class="member-role-dot role-dad"></div>
+              </div>
+              <div class="member-name">Muhammad</div>
+              <div class="member-age">DAD · FOUNDER</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:2px; padding-top:4px;">
+              <div style="width:2px; height:10px; background:var(--gold-dim); opacity:0.4;"></div>
+              <div style="width:24px; height:1.5px; background:var(--gold-dim); opacity:0.4;"></div>
+              <div style="width:2px; height:10px; background:var(--gold-dim); opacity:0.4;"></div>
+              <div style="color:var(--gold); font-size:0.65rem; opacity:0.7;">♡</div>
+              <div style="width:2px; height:10px; background:var(--gold-dim); opacity:0.4;"></div>
+              <div style="width:24px; height:1.5px; background:var(--gold-dim); opacity:0.4;"></div>
+              <div style="width:2px; height:10px; background:var(--gold-dim); opacity:0.4;"></div>
+            </div>
+            <div class="tree-member">
+              <div class="member-avatar mum">
+                👩
+                <div class="member-role-dot role-mum"></div>
+              </div>
+              <div class="member-name">Camilla</div>
+              <div class="member-age">MUM · CO-FOUNDER</div>
+            </div>
+          </div>
+
+          <!-- Connector -->
+          <div style="display:flex; flex-direction:column; align-items:center;">
+            <div style="width:2px; height:20px; background:linear-gradient(to bottom, var(--gold-dim), var(--rule-light)); opacity:0.4;"></div>
+            <div style="width:220px; height:1.5px; background:var(--rule-light); opacity:0.5;"></div>
+          </div>
+
+          <!-- Children -->
+          <div style="display:flex; justify-content:space-between; width:240px; margin-top:0;">
+            <!-- each child gets a vertical line down then the member -->
+            <div class="tree-member" style="align-items:center;">
+              <div style="width:2px; height:18px; background:var(--rule-light); opacity:0.4;"></div>
+              <div class="member-avatar child1">👦
+                <div class="member-role-dot role-child"></div>
+              </div>
+              <div class="member-name">Yahya</div>
+              <div class="member-age">AGE 11</div>
+            </div>
+            <div class="tree-member" style="align-items:center;">
+              <div style="width:2px; height:18px; background:var(--rule-light); opacity:0.4;"></div>
+              <div class="member-avatar child2">👦
+                <div class="member-role-dot role-child"></div>
+              </div>
+              <div class="member-name">Isa</div>
+              <div class="member-age">AGE 10</div>
+            </div>
+            <div class="tree-member" style="align-items:center;">
+              <div style="width:2px; height:18px; background:var(--rule-light); opacity:0.4;"></div>
+              <div class="member-avatar child3">👧
+                <div class="member-role-dot role-child"></div>
+              </div>
+              <div class="member-name">Linah</div>
+              <div class="member-age">AGE 7</div>
+            </div>
+            <div class="tree-member" style="align-items:center;">
+              <div style="width:2px; height:18px; background:var(--rule-light); opacity:0.4;"></div>
+              <div class="member-avatar child4">👧
+                <div class="member-role-dot role-child"></div>
+              </div>
+              <div class="member-name">Dana</div>
+              <div class="member-age">AGE 6</div>
+            </div>
+          </div>
+
+          <!-- Roles legend -->
+          <div style="display:flex; gap:1rem; margin-top:1.2rem; padding-top:1rem; border-top:1px solid var(--rule); width:100%; justify-content:center;">
+            <div style="display:flex; align-items:center; gap:0.3rem;">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:0.48rem;color:var(--grey);letter-spacing:0.1em;">FOUNDER</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.3rem;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#b084cc;"></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:0.48rem;color:var(--grey);letter-spacing:0.1em;">CO-FOUNDER</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.3rem;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#4a9eca;"></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:0.48rem;color:var(--grey);letter-spacing:0.1em;">CO-BUILDER</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📅 Family Calendar</div>
+          <div class="card-action">+ Add Event</div>
+        </div>
+
+        <!-- Member filter pills -->
+        <div class="member-filters" id="memberFilters">
+          <div class="filter-pill active-dad" data-member="dad" onclick="toggleFilter(this)">Muhammad</div>
+          <div class="filter-pill active-mum" data-member="mum" onclick="toggleFilter(this)">Camilla</div>
+          <div class="filter-pill active-yahya" data-member="yahya" onclick="toggleFilter(this)">Yahya</div>
+          <div class="filter-pill active-isa" data-member="isa" onclick="toggleFilter(this)">Isa</div>
+          <div class="filter-pill active-linah" data-member="linah" onclick="toggleFilter(this)">Linah</div>
+          <div class="filter-pill active-dana" data-member="dana" onclick="toggleFilter(this)">Dana</div>
+        </div>
+
+        <!-- Month nav -->
+        <div class="cal-nav">
+          <button class="cal-btn" onclick="prevMonth()">‹</button>
+          <div class="cal-month" id="calMonth">March 2026</div>
+          <button class="cal-btn" onclick="nextMonth()">›</button>
+        </div>
+
+        <!-- Calendar grid -->
+        <div class="cal-grid" id="calGrid">
+          <div class="cal-day-header">MON</div>
+          <div class="cal-day-header">TUE</div>
+          <div class="cal-day-header">WED</div>
+          <div class="cal-day-header">THU</div>
+          <div class="cal-day-header">FRI</div>
+          <div class="cal-day-header">SAT</div>
+          <div class="cal-day-header">SUN</div>
+        </div>
+
+        <!-- Upcoming events — live from Family Seedat calendar -->
+        <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--rule);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:0.5rem; letter-spacing:0.2em; color:var(--gold-dim);">UPCOMING · FAMILY SEEDAT</div>
+            <a href="https://calendar.google.com/calendar/embed?src=family17416474355723583328%40group.calendar.google.com&ctz=Asia%2FQatar" target="_blank" style="font-family:'IBM Plex Mono',monospace; font-size:0.48rem; letter-spacing:0.1em; color:var(--grey); text-decoration:none; border:1px solid var(--rule-light); padding:0.15rem 0.4rem; border-radius:3px;">Open ↗</a>
+          </div>
+          <div class="event-item">
+            <div class="event-dot" style="background:#4a9eca;"></div>
+            <div class="event-content">
+              <div class="event-title">Yahya Tennis Training</div>
+              <div class="event-meta">TODAY, TUE 10 MAR · 7:00 PM · ARG TENNIS COURT 2</div>
+            </div>
+          </div>
+          <div class="event-item">
+            <div class="event-dot" style="background:#ca9e4a;"></div>
+            <div class="event-content">
+              <div class="event-title">Athletics</div>
+              <div class="event-meta">SAT 14 MAR · 4:30 PM · ISA + CAMILLA</div>
+            </div>
+          </div>
+          <div class="event-item">
+            <div class="event-dot" style="background:var(--gold);"></div>
+            <div class="event-content">
+              <div class="event-title">🌙 DC Spring Break (Eid Al Fitr)</div>
+              <div class="event-meta">SUN 15 MAR · ALL DAY · SCHOOL HOLIDAY</div>
+            </div>
+          </div>
+          <div class="event-item">
+            <div class="event-dot" style="background:var(--gold);"></div>
+            <div class="event-content">
+              <div class="event-title">🌙 QFS End of Ramadan</div>
+              <div class="event-meta">THU 19 MAR · ALL DAY</div>
+            </div>
+          </div>
+          <div class="event-item">
+            <div class="event-dot" style="background:#4aca4a;"></div>
+            <div class="event-content">
+              <div class="event-title">🎉 QFS Eid Holidays (Tentative)</div>
+              <div class="event-meta">SUN 22 MAR · ALL DAY · EID MUBARAK 🌙</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embedded Google Calendar -->
+        <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--rule);">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:0.5rem; letter-spacing:0.2em; color:var(--gold-dim); margin-bottom:0.5rem;">FAMILY SEEDAT · LIVE CALENDAR</div>
+          <div class="gcal-embed-wrapper">
+            <iframe
+              src="https://calendar.google.com/calendar/embed?src=family17416474355723583328%40group.calendar.google.com&ctz=Asia%2FQatar&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0&mode=AGENDA"
+              height="200">
+            </iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 40-Day Roadmap phases -->
+    <div class="card full-width">
+      <div class="card-header">
+        <div class="card-title">🗺️ 40-Day Roadmap — Phase Overview</div>
+        <div class="card-action">View Full →</div>
+      </div>
+      <div class="roadmap-phases">
+        <div class="phase-block current">
+          <div class="phase-num">PHASE 01</div>
+          <div class="phase-name-s">Foundation</div>
+          <div class="phase-days-s">Days 1–7</div>
+          <div class="phase-who">FULL FAMILY</div>
+          <div class="phase-progress"><div class="fill" style="width:14%"></div></div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-num">PHASE 02</div>
+          <div class="phase-name-s">Architecture</div>
+          <div class="phase-days-s">Days 8–14</div>
+          <div class="phase-who">MUHAMMAD + YAHYA</div>
+          <div class="phase-progress"><div class="fill" style="width:0%"></div></div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-num">PHASE 03</div>
+          <div class="phase-name-s">Rhythm</div>
+          <div class="phase-days-s">Days 15–21</div>
+          <div class="phase-who">FULL FAMILY</div>
+          <div class="phase-progress"><div class="fill" style="width:0%"></div></div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-num">PHASE 04</div>
+          <div class="phase-name-s">Child Builds</div>
+          <div class="phase-days-s">Days 22–28</div>
+          <div class="phase-who">EACH CHILD LEADS</div>
+          <div class="phase-progress"><div class="fill" style="width:0%"></div></div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-num">PHASE 05</div>
+          <div class="phase-name-s">The App</div>
+          <div class="phase-days-s">Days 29–35</div>
+          <div class="phase-who">MUHAMMAD + BOYS</div>
+          <div class="phase-progress"><div class="fill" style="width:0%"></div></div>
+        </div>
+        <div class="phase-block">
+          <div class="phase-num">PHASE 06</div>
+          <div class="phase-name-s">Launch & Legacy</div>
+          <div class="phase-days-s">Days 36–40</div>
+          <div class="phase-who">FULL FAMILY</div>
+          <div class="phase-progress"><div class="fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notion Workspace + Quick Actions -->
+    <div class="grid-2">
+
+      <!-- Notion workspace -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📁 Notion Workspace</div>
+          <div class="card-action" onclick="window.open('https://www.notion.so/0e0bea2f459f479a877fec4e116abb07','_blank')">Open Bayt Seedat OS ↗</div>
+        </div>
+        <div class="notion-setup">
+          <div class="notion-page" onclick="window.open('https://www.notion.so/0e0bea2f459f479a877fec4e116abb07','_blank')">
+            <div class="notion-page-icon">🏠</div>
+            <div class="notion-page-name">Bayt Seedat OS</div>
+            <div class="notion-page-desc">Your family OS command center</div>
+            <div class="notion-status status-ready">LIVE ↗</div>
+          </div>
+          <div class="notion-page" onclick="window.open('https://www.notion.so/2ea249c08bfd81678251e463c7a2ea2a','_blank')">
+            <div class="notion-page-icon">👨‍👩‍👧‍👦</div>
+            <div class="notion-page-name">Family Seedat DB</div>
+            <div class="notion-page-desc">Family database — members & records</div>
+            <div class="notion-status status-ready">LIVE ↗</div>
+          </div>
+          <div class="notion-page" onclick="window.open('https://www.notion.so/cce78c120f9343f18e0ad3df1de3a2d4','_blank')">
+            <div class="notion-page-icon">🌱</div>
+            <div class="notion-page-name">Seed@Family Home</div>
+            <div class="notion-page-desc">Legacy family page</div>
+            <div class="notion-status status-ready">LIVE ↗</div>
+          </div>
+          <div class="notion-page">
+            <div class="notion-page-icon">📜</div>
+            <div class="notion-page-name">Manifesto</div>
+            <div class="notion-page-desc">Family constitution — Yahya writes it tonight</div>
+            <div class="notion-status status-build">SESSION 01</div>
+          </div>
+          <div class="notion-page">
+            <div class="notion-page-icon">👶</div>
+            <div class="notion-page-name">Child Profiles</div>
+            <div class="notion-page-desc">Yahya · Isa · Linah · Dana — holistic profiles</div>
+            <div class="notion-status status-build">SESSION 03</div>
+          </div>
+          <div class="notion-page">
+            <div class="notion-page-icon">🕌</div>
+            <div class="notion-page-name">Deen Tracker</div>
+            <div class="notion-page-desc">Salah, Quran & habits — full family</div>
+            <div class="notion-status status-soon">PHASE 3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ Quick Actions</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon">📋</div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Run Play 01 — Manifesto Builder</div>
+            <div class="quick-action-desc">Start Session 01 · Open tonight after Isha</div>
+          </div>
+          <div class="quick-action-arrow">›</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon">🧠</div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Run Play 02 — Parent Assessment</div>
+            <div class="quick-action-desc">Private · 4 children · After they sleep</div>
+          </div>
+          <div class="quick-action-arrow">›</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon">👦</div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Build Child Profile — Yahya (11)</div>
+            <div class="quick-action-desc">Session 03 · Friday after Jumu'ah</div>
+          </div>
+          <div class="quick-action-arrow">›</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon">📁</div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Setup Notion Workspace</div>
+            <div class="quick-action-desc">Create 6 core pages · Link family calendar</div>
+          </div>
+          <div class="quick-action-arrow">›</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon">🗓️</div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">View Full 40-Day Roadmap</div>
+            <div class="quick-action-desc">All 6 phases · Mon/Wed/Fri rhythm</div>
+          </div>
+          <div class="quick-action-arrow">›</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ─── CALENDAR ───────────────────────────────────
+let currentYear = 2026;
+let currentMonth = 2; // 0-indexed, 2 = March
+
+// Live events from Family Seedat Google Calendar
+const familyEvents = [
+  // Tennis — Yahya (recurring Sun/Mon/Thu evenings)
+  { date: '2026-03-10', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-12', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-15', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-17', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-19', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-22', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-24', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-29', member: 'yahya', title: 'Tennis Training · 7pm' },
+  { date: '2026-03-31', member: 'yahya', title: 'Tennis Training · 7pm' },
+  // Tennis — Mum (attends with Yahya)
+  { date: '2026-03-10', member: 'mum', title: 'Yahya Tennis' },
+  { date: '2026-03-15', member: 'mum', title: 'Yahya Tennis' },
+  { date: '2026-03-22', member: 'mum', title: 'Yahya Tennis' },
+  { date: '2026-03-29', member: 'mum', title: 'Yahya Tennis' },
+  // Athletics — Isa + Mum (Saturdays)
+  { date: '2026-03-14', member: 'isa', title: 'Athletics · 4:30pm' },
+  { date: '2026-03-14', member: 'mum', title: 'Athletics with Isa' },
+  { date: '2026-03-21', member: 'isa', title: 'Athletics · 4:30pm' },
+  { date: '2026-03-21', member: 'mum', title: 'Athletics with Isa' },
+  { date: '2026-03-28', member: 'isa', title: 'Athletics · 4:30pm' },
+  { date: '2026-03-28', member: 'mum', title: 'Athletics with Isa' },
+  { date: '2026-04-04', member: 'isa', title: 'Athletics · 4:30pm' },
+  { date: '2026-04-11', member: 'isa', title: 'Athletics · 4:30pm' },
+  // Football — DSP (Mondays)
+  { date: '2026-03-16', member: 'yahya', title: 'Football DSP · 8pm' },
+  { date: '2026-03-16', member: 'isa', title: 'Football DSP · 8pm' },
+  { date: '2026-03-23', member: 'yahya', title: 'Football DSP · 8pm' },
+  { date: '2026-03-23', member: 'isa', title: 'Football DSP · 8pm' },
+  { date: '2026-03-30', member: 'yahya', title: 'Football DSP · 8pm' },
+  { date: '2026-03-30', member: 'isa', title: 'Football DSP · 8pm' },
+  // Padel — Dad (Mon/Tue mornings + Fridays)
+  { date: '2026-03-13', member: 'dad', title: 'Padel In · 9am' },
+  { date: '2026-03-16', member: 'dad', title: 'Padel · 7am' },
+  { date: '2026-03-17', member: 'dad', title: 'Padel · 8am' },
+  { date: '2026-03-20', member: 'dad', title: 'Padel In · 9am' },
+  { date: '2026-03-23', member: 'dad', title: 'Padel · 7am' },
+  { date: '2026-03-24', member: 'dad', title: 'Padel · 8am' },
+  { date: '2026-03-27', member: 'dad', title: 'Padel In · 9am' },
+  { date: '2026-03-30', member: 'dad', title: 'Padel · 7am' },
+  { date: '2026-03-31', member: 'dad', title: 'Padel · 8am' },
+  // School holidays
+  { date: '2026-03-15', member: 'yahya', title: 'DC Spring Break (Eid)' },
+  { date: '2026-03-19', member: 'isa', title: 'QFS End of Ramadan' },
+  { date: '2026-03-19', member: 'linah', title: 'QFS End of Ramadan' },
+  { date: '2026-03-19', member: 'dana', title: 'QFS End of Ramadan' },
+  { date: '2026-03-22', member: 'isa', title: 'Eid Holidays 🎉' },
+  { date: '2026-03-22', member: 'linah', title: 'Eid Holidays 🎉' },
+  { date: '2026-03-22', member: 'dana', title: 'Eid Holidays 🎉' },
+  { date: '2026-03-22', member: 'yahya', title: 'Eid Holidays 🎉' },
+  { date: '2026-03-22', member: 'dad', title: 'Eid Mubarak 🌙' },
+  { date: '2026-03-22', member: 'mum', title: 'Eid Mubarak 🌙' },
+  { date: '2026-03-29', member: 'yahya', title: 'DC Term 3 Begins' },
+];
+
+const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+let activeFilters = new Set(['dad','mum','yahya','isa','linah','dana']);
+
+function toggleFilter(el) {
+  const member = el.dataset.member;
+  const cls = 'active-' + member;
+  if (activeFilters.has(member)) {
+    activeFilters.delete(member);
+    el.classList.remove(cls);
+  } else {
+    activeFilters.add(member);
+    el.classList.add(cls);
+  }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  // Clear existing day cells (keep headers)
+  const headers = Array.from(grid.querySelectorAll('.cal-day-header'));
+  grid.innerHTML = '';
+  headers.forEach(h => grid.appendChild(h));
+
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+  const today = new Date(2026, 2, 10); // March 10 2026
+
+  // Day of week for first (0=Sun, but we want Mon-first)
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // convert to Mon-first
+
+  // Prev month padding
+  const prevLastDay = new Date(currentYear, currentMonth, 0).getDate();
+  for (let i = startDow - 1; i >= 0; i--) {
+    const d = document.createElement('div');
+    d.className = 'cal-day other-month';
+    d.innerHTML = `<span class="cal-day-num">${prevLastDay - i}</span>`;
+    grid.appendChild(d);
+  }
+
+  // Current month days
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const d = document.createElement('div');
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isToday = (day === 10 && currentMonth === 2 && currentYear === 2026);
+    d.className = 'cal-day' + (isToday ? ' today' : '');
+
+    // Find events for this day that match active filters
+    const dayEvents = familyEvents.filter(e => e.date === dateStr && activeFilters.has(e.member));
+    const members = [...new Set(dayEvents.map(e => e.member))];
+
+    let dots = '';
+    if (members.length > 0) {
+      dots = '<div class="cal-dot-row">' + members.map(m => `<div class="cal-dot dot-${m}"></div>`).join('') + '</div>';
+    }
+
+    d.innerHTML = `<span class="cal-day-num">${day}</span>${dots}`;
+    d.title = dayEvents.map(e => e.title).join('\n') || '';
+    grid.appendChild(d);
+  }
+
+  // Next month padding
+  const totalCells = grid.querySelectorAll('.cal-day:not(.other-month), .cal-day.other-month').length;
+  const endPad = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= endPad; i++) {
+    const d = document.createElement('div');
+    d.className = 'cal-day other-month';
+    d.innerHTML = `<span class="cal-day-num">${i}</span>`;
+    grid.appendChild(d);
+  }
+
+  document.getElementById('calMonth').textContent = months[currentMonth] + ' ' + currentYear;
+}
+
+function prevMonth() {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+}
+function nextMonth() {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderCalendar();
+}
+
+function openNotion() {
+  window.open('https://www.notion.so/0e0bea2f459f479a877fec4e116abb07', '_blank');
+}
+
+// ─── TOPBAR DATE ───────────────────────────────
+document.getElementById('topbar-date').textContent =
+  new Date(2026, 2, 10).toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+// ─── INIT ──────────────────────────────────────
+renderCalendar();
+</script>
+</body>
+</html>

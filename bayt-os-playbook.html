@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAYT OS — The Islamic Family Playbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black:    #060e09;
+    --offblack: #0d1a11;
+    --forest:   #12251a;
+    --green:    #1a3d28;
+    --midgreen: #245235;
+    --gold:     #c9a84c;
+    --gold-dim: #8b7034;
+    --gold-pale:#e8d5a3;
+    --cream:    #f5f0e6;
+    --white:    #faf8f2;
+    --grey:     #7a8c7e;
+    --rule:     #1e3025;
+    --rule-light:#2d4a35;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--black);
+    color: var(--white);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--green);
+    border-bottom: 1px solid var(--gold-dim);
+    padding: 0.45rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 10;
+  }
+  .topbar-brand {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+  }
+  .topbar-right {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: rgba(201,168,76,0.5);
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--offblack);
+    border-bottom: 1px solid var(--rule);
+    padding: 5rem 3rem 3.5rem;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  /* Geometric Islamic pattern behind header */
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 520px; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='%23c9a84c' stroke-width='0.3' opacity='0.08'%3E%3Cpolygon points='40,2 78,22 78,58 40,78 2,58 2,22'/%3E%3Cpolygon points='40,14 66,28 66,52 40,66 14,52 14,28'/%3E%3Cline x1='40' y1='2' x2='40' y2='78'/%3E%3Cline x1='2' y1='40' x2='78' y2='40'/%3E%3Cline x1='14' y1='14' x2='66' y2='66'/%3E%3Cline x1='66' y1='14' x2='14' y2='66'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
+    pointer-events: none;
+  }
+
+  header::after {
+    content: 'بيت';
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18rem;
+    color: rgba(201,168,76,0.04);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    font-family: serif;
+  }
+
+  .header-inner {
+    max-width: 940px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: end;
+    position: relative;
+    z-index: 2;
+  }
+
+  .header-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 9vw, 8rem);
+    letter-spacing: 0.04em;
+    line-height: 0.9;
+    color: var(--white);
+  }
+  h1 .sub {
+    display: block;
+    color: var(--gold);
+    font-size: clamp(2.2rem, 5vw, 4.2rem);
+    letter-spacing: 0.06em;
+  }
+
+  .header-desc {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--grey);
+    margin-top: 1.4rem;
+    line-height: 1.8;
+    max-width: 560px;
+  }
+
+  .badge-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.15em;
+    border: 1px solid var(--rule);
+    padding: 0.3rem 0.65rem;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+  .badge.gold { border-color: var(--gold-dim); color: var(--gold); }
+
+  .meta-strip {
+    border-top: 1px solid var(--rule);
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    color: var(--grey);
+  }
+  .meta-strip .pipe { color: var(--rule-light); }
+
+  /* ── BRANDING BLOCK ── */
+  .brand-reveal {
+    background: var(--forest);
+    border: 1px solid var(--gold-dim);
+    border-left: 4px solid var(--gold);
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+    position: relative;
+  }
+  .brand-reveal::before {
+    content: '◆ THE NAME & BRAND';
+    position: absolute;
+    top: -0.7rem;
+    left: 1.5rem;
+    background: var(--black);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    padding: 0 0.6rem;
+  }
+
+  .brand-name-display {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .brand-name-en {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    color: var(--white);
+    letter-spacing: 0.1em;
+    line-height: 1;
+  }
+  .brand-name-ar {
+    font-size: 3.5rem;
+    color: var(--gold);
+    font-family: serif;
+    line-height: 1;
+  }
+
+  .brand-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .brand-cell {
+    border-top: 1px solid var(--rule-light);
+    padding-top: 0.8rem;
+  }
+  .brand-cell-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.25em;
+    color: var(--gold-dim);
+    margin-bottom: 0.4rem;
+  }
+  .brand-cell-value {
+    font-size: 1rem;
+    color: var(--cream);
+    line-height: 1.5;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 3rem 3rem 8rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SETUP PANEL ── */
+  .setup-panel {
+    background: var(--forest);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--gold);
+    padding: 2.5rem;
+    margin-bottom: 4rem;
+    position: relative;
+  }
+  .setup-panel::before {
+    content: 'STEP 01 — PERSONALISE YOUR FAMILY PLAYBOOK';
+    position: absolute;
+    top: -0.7rem;
+    left: 1.5rem;
+    background: var(--black);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    padding: 0 0.6rem;
+  }
+  .setup-panel h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    color: var(--white);
+    margin-bottom: 0.4rem;
+  }
+  .setup-panel p {
+    font-size: 0.95rem;
+    color: var(--grey);
+    margin-bottom: 1.8rem;
+    font-style: italic;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.full  { grid-template-columns: 1fr; }
+
+  .field-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  input[type="text"], textarea, select {
+    width: 100%;
+    background: var(--offblack);
+    border: 1px solid var(--rule-light);
+    color: var(--white);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    padding: 0.65rem 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 0.05em;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus {
+    border-color: var(--gold-dim);
+  }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  select { cursor: pointer; }
+  select option { background: var(--offblack); }
+
+  .section-divider {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--gold-dim);
+    border-top: 1px solid var(--rule);
+    padding-top: 1rem;
+    margin: 1.5rem 0 1.2rem;
+  }
+
+  .generate-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 0.9rem 2.5rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 0.5rem;
+  }
+  .generate-btn:hover { background: var(--gold-pale); transform: translateY(-1px); }
+
+  /* ── PLAY BLOCKS ── */
+  .play-section {
+    margin-bottom: 5rem;
+  }
+
+  .play-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1.2rem;
+  }
+
+  .play-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4.5rem;
+    color: rgba(201,168,76,0.15);
+    line-height: 1;
+    min-width: 80px;
+  }
+
+  .play-title-block {}
+  .play-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--gold-dim);
+    margin-bottom: 0.3rem;
+  }
+  .play-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    line-height: 1;
+  }
+  .play-subtitle {
+    font-size: 0.92rem;
+    font-style: italic;
+    color: var(--grey);
+    margin-top: 0.3rem;
+  }
+  .play-cadence {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.15em;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    padding: 0.3rem 0.65rem;
+    white-space: nowrap;
+    align-self: center;
+  }
+
+  /* ── PROMPT BLOCKS ── */
+  .prompt-block {
+    background: var(--forest);
+    border: 1px solid var(--rule);
+    padding: 0;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .prompt-label-bar {
+    background: var(--green);
+    border-bottom: 1px solid var(--rule-light);
+    padding: 0.5rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .plabel {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .copy-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.15em;
+    background: none;
+    border: 1px solid var(--rule-light);
+    color: var(--grey);
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .copy-btn.copied { border-color: var(--gold); color: var(--gold); }
+
+  .prompt-body {
+    padding: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.8;
+    color: var(--cream);
+    white-space: pre-wrap;
+    letter-spacing: 0.02em;
+  }
+
+  .prompt-body .v {
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .prompt-body .section-head {
+    color: var(--white);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    font-size: 0.65rem;
+  }
+
+  .prompt-body .arrow {
+    color: var(--gold-dim);
+  }
+
+  /* ── CHILD SELECTOR ── */
+  .child-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .child-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--rule-light);
+    background: none;
+    color: var(--grey);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .child-tab:hover { border-color: var(--gold-dim); color: var(--gold-pale); }
+  .child-tab.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.07); }
+
+  /* ── PROFILE PARTS ── */
+  .profile-parts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .part-card {
+    background: var(--forest);
+    border: 1px solid var(--rule);
+    padding: 1.5rem;
+  }
+  .part-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.25em;
+    color: var(--gold-dim);
+    margin-bottom: 0.3rem;
+  }
+  .part-card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: var(--white);
+    margin-bottom: 0.8rem;
+  }
+  .part-card p {
+    font-size: 0.88rem;
+    color: var(--grey);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .part-card.full {
+    grid-column: 1 / -1;
+  }
+
+  /* ── MEETING AGENDA BLOCK ── */
+  .agenda-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .agenda-row:last-child { border-bottom: none; }
+  .agenda-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--gold-dim);
+    padding: 0.8rem;
+    border-right: 1px solid var(--rule);
+    letter-spacing: 0.1em;
+  }
+  .agenda-item {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+    color: var(--cream);
+  }
+  .agenda-item strong {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--white);
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  /* ── COMMERCIAL BOX ── */
+  .commercial-box {
+    background: var(--forest);
+    border: 1px solid var(--gold-dim);
+    padding: 2rem 2.5rem;
+    margin-top: 4rem;
+    position: relative;
+  }
+  .commercial-box::before {
+    content: '◆ COMMERCIAL ARCHITECTURE';
+    position: absolute;
+    top: -0.7rem;
+    left: 1.5rem;
+    background: var(--black);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    padding: 0 0.6rem;
+  }
+
+  .funnel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    margin-top: 1.5rem;
+  }
+  .funnel-cell {
+    background: var(--offblack);
+    padding: 1.2rem;
+  }
+  .funnel-phase {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    margin-bottom: 0.4rem;
+  }
+  .funnel-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+  .funnel-desc {
+    font-size: 0.8rem;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+  .funnel-price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--gold);
+    margin-top: 0.6rem;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--forest);
+    border-top: 1px solid var(--rule);
+    padding: 1.5rem 3rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  footer p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--grey);
+  }
+  footer .ayah {
+    font-size: 1.1rem;
+    color: var(--gold-pale);
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 3rem 1.5rem 2rem; }
+    main { padding: 2rem 1.5rem 4rem; }
+    .topbar { padding: 0.4rem 1.5rem; }
+    .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+    .header-inner { grid-template-columns: 1fr; }
+    .brand-grid { grid-template-columns: 1fr; }
+    .profile-parts { grid-template-columns: 1fr; }
+    .funnel-grid { grid-template-columns: 1fr 1fr; }
+    h1 { font-size: 3.5rem; }
+    .play-header { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">BAYT OS — بيت — THE ISLAMIC FAMILY OPERATING SYSTEM</div>
+  <div class="topbar-right" id="topbar-date">PLAYBOOK v1.0 — 2026</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-eyebrow">◆ THE SEEDAT FAMILY — BISMILLAH</div>
+      <h1>BAYT<span class="sub">OS PLAYBOOK</span></h1>
+      <p class="header-desc">Five plays to build your Family Operating System — layer by layer, day by day, rooted in deen and driven by intention.</p>
+      <div class="meta-strip">
+        <span>PLAYS: 5</span>
+        <span class="pipe">|</span>
+        <span>LAYERS: MANIFESTO → PROFILE → SHURA → 1:1 → DAILY RHYTHM</span>
+        <span class="pipe">|</span>
+        <span>PHASE 1 OF 6</span>
+      </div>
+    </div>
+    <div class="badge-stack">
+      <div class="badge gold">◆ FAMILY OS</div>
+      <div class="badge">NOTION BACKEND</div>
+      <div class="badge">GMAIL · GDRIVE · IMESSAGE</div>
+      <div class="badge">PHASE 1 — FOUNDATION</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── BRANDING BLOCK ── -->
+  <div class="brand-reveal">
+    <div class="brand-name-display">
+      <div class="brand-name-en">BAYT</div>
+      <div class="brand-name-ar">بيت</div>
+    </div>
+    <p style="font-size:1.05rem;color:var(--cream);line-height:1.7;max-width:700px;margin-bottom:1.2rem;">
+      Arabic for <em>home</em>. The word that appears in the Quran to denote sanctuary, belonging, and sacred space. Your family already knows this word — it needs no translation, no explanation. It is the OS that was always meant to run the home.
+    </p>
+    <div class="brand-grid">
+      <div class="brand-cell">
+        <div class="brand-cell-label">FULL NAME</div>
+        <div class="brand-cell-value">BAYT OS — The Islamic Family Operating System</div>
+      </div>
+      <div class="brand-cell">
+        <div class="brand-cell-label">TAGLINE</div>
+        <div class="brand-cell-value">"Run your home like it was designed with purpose."</div>
+      </div>
+      <div class="brand-cell">
+        <div class="brand-cell-label">ROOT AYAH</div>
+        <div class="brand-cell-value">قُوا أَنفُسَكُمْ وَأَهْلِيكُمْ نَارًا — "Protect yourselves and your families." (66:6)</div>
+      </div>
+      <div class="brand-cell">
+        <div class="brand-cell-label">BRAND PALETTE</div>
+        <div class="brand-cell-value">Forest Green · Saffron Gold · Ivory Cream · Deep Black</div>
+      </div>
+      <div class="brand-cell">
+        <div class="brand-cell-label">BRAND VOICE</div>
+        <div class="brand-cell-value">Grounded. Warm. Precise. Never preachy — always purposeful.</div>
+      </div>
+      <div class="brand-cell">
+        <div class="brand-cell-label">COMMERCIAL HANDLE</div>
+        <div class="brand-cell-value">@bayt.os — bayt.family — the.bayt</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SETUP PANEL ── -->
+  <div class="setup-panel">
+    <h2>Personalise Your Playbook</h2>
+    <p>Enter your family details once. Every prompt below will be generated for your family specifically.</p>
+
+    <div class="form-grid">
+      <div>
+        <label class="field-label">FAMILY NAME</label>
+        <input type="text" id="family-name" value="Seedat" placeholder="e.g. Al-Rashid">
+      </div>
+      <div>
+        <label class="field-label">LOCATION / CITY</label>
+        <input type="text" id="family-city" value="Doha, Qatar" placeholder="e.g. Cape Town">
+      </div>
+    </div>
+
+    <div class="section-divider">◆ PARENTS</div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label">FATHER NAME + ROLE</label>
+        <input type="text" id="father-name" value="Muhammad" placeholder="e.g. Ibrahim">
+      </div>
+      <div>
+        <label class="field-label">MOTHER NAME + ROLE</label>
+        <input type="text" id="mother-name" value="Umm Yahya" placeholder="e.g. Khadijah">
+      </div>
+    </div>
+
+    <div class="section-divider">◆ CHILDREN (in order)</div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label">CHILD 1 — NAME / AGE</label>
+        <input type="text" id="child1" value="Yahya · 11 · Son">
+      </div>
+      <div>
+        <label class="field-label">CHILD 2 — NAME / AGE</label>
+        <input type="text" id="child2" value="Isa · 10 · Son">
+      </div>
+      <div>
+        <label class="field-label">CHILD 3 — NAME / AGE</label>
+        <input type="text" id="child3" value="Linah · 7 · Daughter">
+      </div>
+      <div>
+        <label class="field-label">CHILD 4 — NAME / AGE</label>
+        <input type="text" id="child4" value="Dana · 6 · Daughter">
+      </div>
+    </div>
+
+    <div class="section-divider">◆ FAMILY CONTEXT</div>
+    <div class="form-grid full">
+      <div>
+        <label class="field-label">FAMILY MADHAB / BACKGROUND</label>
+        <input type="text" id="madhab" value="Sunni Muslim — South African / Indian heritage" placeholder="e.g. Hanafi · Egyptian-South African">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label">FAMILY 3-WORD ESSENCE</label>
+        <input type="text" id="essence" value="Faith. Growth. Legacy." placeholder="e.g. Courage. Service. Truth.">
+      </div>
+      <div>
+        <label class="field-label">FAMILY MOTTO / HADITH</label>
+        <input type="text" id="motto" value="The best of you is the one who is best to his family." placeholder="A hadith or Quran verse...">
+      </div>
+    </div>
+
+    <button class="generate-btn" onclick="generateAll()">◆ GENERATE ALL 5 PLAYS FOR MY FAMILY</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       PLAY 01 — FAMILY MANIFESTO
+  ══════════════════════════════════════════════ -->
+  <div class="play-section">
+    <div class="play-header">
+      <div class="play-number">01</div>
+      <div class="play-title-block">
+        <div class="play-eyebrow">◆ FOUNDATION — RUN ONCE TOGETHER AS A FAMILY</div>
+        <div class="play-title">The Family Manifesto</div>
+        <div class="play-subtitle">The constitution of your home. Written once, lived every day. Reviewed every Ramadan.</div>
+      </div>
+      <div class="play-cadence">ANNUAL · FULL FAMILY</div>
+    </div>
+
+    <div class="profile-parts">
+      <div class="part-card">
+        <div class="part-card-label">WHEN TO RUN</div>
+        <div class="part-card-title">The Setup Session</div>
+        <p>Run this once — ideally in the first family Shura, or during Ramadan. Block 90 minutes. Make it a ritual: good food, nice setting, phones away. The children should be present and contribute at their level.</p>
+      </div>
+      <div class="part-card">
+        <div class="part-card-label">WHAT IT PRODUCES</div>
+        <div class="part-card-title">A Living Document</div>
+        <p>Not a paragraph on the wall — a structured constitution saved in Notion. It governs every family decision, goal, and project. When conflict arises, you return to it. When you lose the plot, it recentres you.</p>
+      </div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">MANIFESTO BUILDER — RUN ONCE AT FOUNDING · THEN REVIEW ANNUALLY IN RAMADAN</span>
+        <button class="copy-btn" onclick="copyPrompt('p-manifesto', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-manifesto">Loading...</div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">ANNUAL MANIFESTO REVIEW — RUN EVERY RAMADAN OR NEW HIJRI YEAR</span>
+        <button class="copy-btn" onclick="copyPrompt('p-manifesto-review', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-manifesto-review">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       PLAY 02 — CHILD PROFILE BUILDER
+  ══════════════════════════════════════════════ -->
+  <div class="play-section">
+    <div class="play-header">
+      <div class="play-number">02</div>
+      <div class="play-title-block">
+        <div class="play-eyebrow">◆ PEOPLE LAYER — 3-PART PROFILE SYSTEM</div>
+        <div class="play-title">The Child Profile</div>
+        <div class="play-subtitle">A complete holistic map of each child — cognitive, physical, faith, character and social. Run at founding, then updated every 6 months.</div>
+      </div>
+      <div class="play-cadence">SEMI-ANNUAL · PER CHILD</div>
+    </div>
+
+    <div class="child-tabs" id="child-tabs">
+      <button class="child-tab active" onclick="setChild(0, this)">YAHYA · 11</button>
+      <button class="child-tab" onclick="setChild(1, this)">ISA · 10</button>
+      <button class="child-tab" onclick="setChild(2, this)">LINAH · 7</button>
+      <button class="child-tab" onclick="setChild(3, this)">DANA · 6</button>
+    </div>
+
+    <div class="profile-parts">
+      <div class="part-card">
+        <div class="part-card-label">PART 1 OF 3</div>
+        <div class="part-card-title">Parent Assessment</div>
+        <p>Parent completes this privately first. Honest, unfiltered view across all development spheres. Do not share with the child before Part 2 is complete.</p>
+      </div>
+      <div class="part-card">
+        <div class="part-card-label">PART 2 OF 3</div>
+        <div class="part-card-title">Child Self-Report</div>
+        <p>Age-appropriate prompts answered by the child themselves — either verbally with a parent scribing, or written independently (for Yahya/Isa). No wrong answers.</p>
+      </div>
+      <div class="part-card full">
+        <div class="part-card-label">PART 3 OF 3 · THE OUTPUT</div>
+        <div class="part-card-title">AI Synthesis → Complete Holistic Profile</div>
+        <p>Feed Part 1 + Part 2 into Claude. The output is a complete, structured profile covering all 6 development spheres. This becomes the child's baseline Notion record and informs every goal, project and 1:1 going forward.</p>
+      </div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel" id="p2-label-1">PART 1 — PARENT ASSESSMENT</span>
+        <button class="copy-btn" onclick="copyPrompt('p-child-parent', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-child-parent">Loading...</div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel" id="p2-label-2">PART 2 — CHILD SELF-REPORT</span>
+        <button class="copy-btn" onclick="copyPrompt('p-child-self', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-child-self">Loading...</div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel" id="p2-label-3">PART 3 — AI SYNTHESIS PROMPT (paste Part 1 + 2 responses into Claude)</span>
+        <button class="copy-btn" onclick="copyPrompt('p-child-synth', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-child-synth">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       PLAY 03 — MONTHLY SHURA
+  ══════════════════════════════════════════════ -->
+  <div class="play-section">
+    <div class="play-header">
+      <div class="play-number">03</div>
+      <div class="play-title-block">
+        <div class="play-eyebrow">◆ GOVERNANCE — THE FAMILY COUNCIL</div>
+        <div class="play-title">Monthly Shura</div>
+        <div class="play-subtitle">The most important meeting your family runs. Consult. Decide. Align. Always ends with du'a. Logged in Notion.</div>
+      </div>
+      <div class="play-cadence">MONTHLY · FULL FAMILY · 60–90 MIN</div>
+    </div>
+
+    <div class="profile-parts">
+      <div class="part-card">
+        <div class="part-card-label">BEFORE THE MEETING</div>
+        <div class="part-card-title">Preparation Prompt</div>
+        <p>Run this 24h before the Shura. Generates the agenda, surfaces open items from Notion, and prepares the conversation starters for each family member.</p>
+      </div>
+      <div class="part-card">
+        <div class="part-card-label">AFTER THE MEETING</div>
+        <div class="part-card-title">Minutes + Action Logger</div>
+        <p>Run this immediately after. Converts your notes into structured Notion entries: decisions made, actions assigned, owner per item, due dates, and the family state-of-the-union.</p>
+      </div>
+    </div>
+
+    <!-- Agenda Structure -->
+    <div class="prompt-block" style="margin-bottom:1rem;">
+      <div class="prompt-label-bar">
+        <span class="plabel">SHURA AGENDA STRUCTURE — FIXED TEMPLATE (60 MINUTES)</span>
+        <span></span>
+      </div>
+      <div style="padding:0;">
+        <div class="agenda-row">
+          <div class="agenda-time">00:00</div>
+          <div class="agenda-item"><strong>IFTITAH — OPENING</strong>Bismillah. Recite opening du'a together. One child leads. State the Hijri date and Gregorian date.</div>
+        </div>
+        <div class="agenda-row">
+          <div class="agenda-time">00:05</div>
+          <div class="agenda-item"><strong>WINS OF THE MONTH</strong>Every person shares ONE thing they're proud of from the past month. No interrupting. Parents celebrate explicitly.</div>
+        </div>
+        <div class="agenda-row">
+          <div class="agenda-time">00:20</div>
+          <div class="agenda-item"><strong>FAMILY GOALS REVIEW</strong>Review the 3 family goals from last month. Red / Yellow / Green status per goal. What moved? What didn't? Why?</div>
+        </div>
+        <div class="agenda-row">
+          <div class="agenda-time">00:30</div>
+          <div class="agenda-item"><strong>OPEN SHURA — FAMILY MATTERS</strong>Anyone can raise a topic. Children get equal voice. Issues resolved by consensus or parent decision with explanation.</div>
+        </div>
+        <div class="agenda-row">
+          <div class="agenda-time">00:45</div>
+          <div class="agenda-item"><strong>NEXT MONTH GOALS + PROJECTS</strong>Set 3 family goals for the coming month. Assign any child-led projects. Confirm upcoming travel, events, outing.</div>
+        </div>
+        <div class="agenda-row">
+          <div class="agenda-time">00:55</div>
+          <div class="agenda-item"><strong>CLOSING — DU'A + COIN CEREMONY</strong>Family coin awards for the month. Close with du'a led by the eldest child. Optional: family dinner follows immediately.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">PRE-SHURA PREP — RUN 24H BEFORE THE MEETING</span>
+        <button class="copy-btn" onclick="copyPrompt('p-shura-prep', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-shura-prep">Loading...</div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">POST-SHURA LOGGER — RUN IMMEDIATELY AFTER · PASTE YOUR NOTES BELOW THE PROMPT</span>
+        <button class="copy-btn" onclick="copyPrompt('p-shura-log', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-shura-log">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       PLAY 04 — 1:1 CHECK-IN
+  ══════════════════════════════════════════════ -->
+  <div class="play-section">
+    <div class="play-header">
+      <div class="play-number">04</div>
+      <div class="play-title-block">
+        <div class="play-eyebrow">◆ INDIVIDUAL LAYER — THE MOST POWERFUL MEETING</div>
+        <div class="play-title">The 1:1 Check-In</div>
+        <div class="play-subtitle">One parent. One child. 20 minutes. No agenda except them. This is where the real relationship is built. Logged in Notion.</div>
+      </div>
+      <div class="play-cadence">BI-WEEKLY · PARENT-CHILD</div>
+    </div>
+
+    <div class="profile-parts">
+      <div class="part-card">
+        <div class="part-card-label">THE RULE</div>
+        <div class="part-card-title">Child's Agenda First</div>
+        <p>The child always speaks first. The parent's job for the first 10 minutes is to listen — not fix, not advise, not correct. Ask: "What's been on your mind?" Then follow their lead.</p>
+      </div>
+      <div class="part-card">
+        <div class="part-card-label">THE OUTPUT</div>
+        <div class="part-card-title">Logged. Tracked. Remembered.</div>
+        <p>Every 1:1 generates a Notion log entry linked to that child's profile. Patterns emerge over time. You begin to see the child more clearly than they see themselves.</p>
+      </div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">1:1 PREP PROMPT — RUN BEFORE EACH SESSION · PERSONALISED PER CHILD</span>
+        <button class="copy-btn" onclick="copyPrompt('p-one2one-prep', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-one2one-prep">Loading...</div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">1:1 LOG PROMPT — RUN AFTER EACH SESSION · PASTE YOUR NOTES</span>
+        <button class="copy-btn" onclick="copyPrompt('p-one2one-log', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-one2one-log">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       PLAY 05 — WEEKLY STANDUP
+  ══════════════════════════════════════════════ -->
+  <div class="play-section">
+    <div class="play-header">
+      <div class="play-number">05</div>
+      <div class="play-title-block">
+        <div class="play-eyebrow">◆ RHYTHM LAYER — THE WEEKLY RESET</div>
+        <div class="play-title">Friday Family Standup</div>
+        <div class="play-subtitle">15 minutes after Jumu'ah. The week that was. The week ahead. Rooted in the barakah of Jumu'ah.</div>
+      </div>
+      <div class="play-cadence">WEEKLY · FRIDAY · 15 MIN</div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">WEEKLY STANDUP PROMPT — RUN EVERY FRIDAY AFTER JUMU'AH</span>
+        <button class="copy-btn" onclick="copyPrompt('p-weekly', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-weekly">Loading...</div>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label-bar">
+        <span class="plabel">PARENT-ONLY DEBRIEF — RUN SUNDAY EVENING (MOM + DAD) · PRIVATE LAYER</span>
+        <button class="copy-btn" onclick="copyPrompt('p-parent-debrief', this)">COPY</button>
+      </div>
+      <div class="prompt-body" id="p-parent-debrief">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ── COMMERCIAL ARCHITECTURE ── -->
+  <div class="commercial-box">
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--white);margin-bottom:0.5rem;">The BAYT Commercial Roadmap</h2>
+    <p style="font-size:0.95rem;color:var(--grey);font-style:italic;margin-bottom:1rem;">How to package and sell each layer of this system as you build it for your own family.</p>
+    <div class="funnel-grid">
+      <div class="funnel-cell">
+        <div class="funnel-phase">LAYER 01 — FREE LEAD</div>
+        <div class="funnel-name">The Manifesto</div>
+        <div class="funnel-desc">Give away the Family Manifesto builder as a free tool. Viral among Muslim parents. Email list builder.</div>
+        <div class="funnel-price">FREE — lead magnet</div>
+      </div>
+      <div class="funnel-cell">
+        <div class="funnel-phase">LAYER 02 — CORE PRODUCT</div>
+        <div class="funnel-name">The Playbook</div>
+        <div class="funnel-desc">This HTML file — packaged as BAYT OS Playbook. 5 plays, personalised prompts, Notion setup guide.</div>
+        <div class="funnel-price">$27–$47 one-off</div>
+      </div>
+      <div class="funnel-cell">
+        <div class="funnel-phase">LAYER 03 — COMMUNITY</div>
+        <div class="funnel-name">BAYT Circle</div>
+        <div class="funnel-desc">Private community of Muslim families running BAYT OS. Monthly group Shura model. Peer accountability.</div>
+        <div class="funnel-price">$19/month</div>
+      </div>
+      <div class="funnel-cell">
+        <div class="funnel-phase">LAYER 04 — PREMIUM</div>
+        <div class="funnel-name">BAYT Pro</div>
+        <div class="funnel-desc">Full Notion workspace, all 6 phase builds, child dashboards, family coin system, crypto integration.</div>
+        <div class="funnel-price">$97/month or $797/year</div>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--rule);">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;letter-spacing:0.2em;color:var(--gold-dim);">◆ CONTENT STRATEGY — </span>
+      <span style="font-size:0.88rem;color:var(--grey);">Each of your own family OS builds becomes content. The journey IS the product. Document Yahya planning the next holiday. Document Dana's first chore coin. The Muslim parent market has no product like this.</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p class="ayah">"And your Lord has decreed that you worship none but Him, and that you be dutiful to your parents." — Al-Isra 17:23</p>
+  <p>BAYT OS · THE SEEDAT FAMILY PLAYBOOK · PHASE 1 · BISMILLAH</p>
+</footer>
+
+<script>
+// ── STATE ──────────────────────────────────────
+let currentChild = 0;
+
+const children = [
+  { name: 'Yahya', age: 11, gender: 'Son', dob: '20 May 2014', stage: 'pre-teen', qLevel: 'memorising surahs', sports: 'active learner' },
+  { name: 'Isa',   age: 10, gender: 'Son', dob: '03 Oct 2015', stage: 'pre-teen', qLevel: 'learning Quran', sports: 'developing interests' },
+  { name: 'Linah', age: 7,  gender: 'Daughter', dob: '29 May 2018', stage: 'early school', qLevel: 'learning to read', sports: 'playful & curious' },
+  { name: 'Dana',  age: 6,  gender: 'Daughter', dob: '22 Feb 2020', stage: 'early school', qLevel: 'learning letters', sports: 'energetic & expressive' }
+];
+
+// ── HELPERS ────────────────────────────────────
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() || `[${id.toUpperCase()}]` : `[${id.toUpperCase()}]`;
+}
+function wrap(text) { return `<span class="v">${text}</span>`; }
+function h(t) { return `<span class="section-head">${t}</span>`; }
+function ar(t) { return `<span class="arrow">${t}</span>`; }
+
+function setChild(index, btn) {
+  currentChild = index;
+  document.querySelectorAll('.child-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderChildPrompts();
+}
+
+// ── RENDER ALL ─────────────────────────────────
+function generateAll() {
+  renderManifesto();
+  renderManifestoReview();
+  renderChildPrompts();
+  renderShura();
+  renderOneToOne();
+  renderWeekly();
+  renderParentDebrief();
+
+  const btn = document.querySelector('.generate-btn');
+  btn.textContent = '◆ ALL 5 PLAYS GENERATED';
+  btn.style.background = '#1a4a35';
+  setTimeout(() => {
+    btn.textContent = '◆ GENERATE ALL 5 PLAYS FOR MY FAMILY';
+    btn.style.background = '';
+  }, 2500);
+
+  document.getElementById('p-manifesto').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── PLAY 01: MANIFESTO ─────────────────────────
+function renderManifesto() {
+  const fam = v('family-name');
+  const father = v('father-name');
+  const mother = v('mother-name');
+  const essence = v('essence');
+  const motto = v('motto');
+  const madhab = v('madhab');
+  const city = v('family-city');
+  const c = children.map(ch => `${ch.name} (${ch.age}, ${ch.gender})`).join(', ');
+
+  document.getElementById('p-manifesto').innerHTML =
+`${h('THE FAMILY MANIFESTO BUILDER — SEEDAT FAMILY, ' + city.toUpperCase())}
+
+We are the ${wrap(fam)} family. Help us write our Family Manifesto — the founding constitution of our home.
+
+${h('OUR FAMILY:')}
+Father: ${wrap(father)} · Mother: ${wrap(mother)}
+Children: ${wrap(c)}
+Heritage: ${wrap(madhab)}
+Our essence: "${wrap(essence)}"
+Our guiding hadith/ayah: "${wrap(motto)}"
+
+${h('BUILD US A MANIFESTO THAT CONTAINS:')}
+
+${ar('→')} PART 1 — OUR VISION (10-YEAR PICTURE)
+   What does the ${wrap(fam)} family look like in 2035?
+   What have we built, raised, and left behind?
+   Frame it as a vivid picture, not a list of goals.
+
+${ar('→')} PART 2 — OUR MISSION (DAILY PURPOSE)
+   One sentence. What is our family for — in this dunya?
+   It must reference Allah, our community, and our legacy.
+
+${ar('→')} PART 3 — OUR NON-NEGOTIABLES (5 MAX)
+   The things that never move — regardless of mood, money, or circumstance.
+   These are the lines we do not cross as a family.
+
+${ar('→')} PART 4 — OUR FAMILY VALUES (5, RANKED)
+   With a one-line description of what each value means IN THIS FAMILY.
+   Not generic words — specific to how the ${wrap(fam)} family lives them.
+
+${ar('→')} PART 5 — OUR SULH PROTOCOL
+   When conflict arises between family members — what are the agreed steps?
+   Islamic framework (seek truth, seek peace, seek forgiveness) applied to family life.
+
+${ar('→')} PART 6 — OUR SHURA PRINCIPLE
+   How are decisions made in this family? Who has voice? When does the father decide? When do we vote?
+   Write it as a principle we can point to when decision-making becomes difficult.
+
+${ar('→')} PART 7 — A LETTER TO OUR CHILDREN
+   Written from the parents to Yahya, Isa, Linah and Dana.
+   What do we want them to know about why this family exists?
+   To be read at the first Shura and archived for when they are older.
+
+${ar('→')} CLOSING SEAL
+   A single sentence that ends every family meeting, printed on the wall.
+   In Arabic and English.
+
+Write it with warmth, precision, and depth. This is not a corporate document — it is a covenant.`;
+}
+
+function renderManifestoReview() {
+  const fam = v('family-name');
+  document.getElementById('p-manifesto-review').innerHTML =
+`${h('ANNUAL MANIFESTO REVIEW — ' + fam.toUpperCase() + ' FAMILY')}
+
+It has been one year since we wrote our Family Manifesto.
+[PASTE YOUR ORIGINAL MANIFESTO BELOW THIS LINE]
+
+Now, review it with us:
+
+${ar('→')} WHAT HELD TRUE — Which values, principles and non-negotiables did we actually live this year?
+   Be specific. Give us evidence, not reassurance.
+
+${ar('→')} WHAT FELL SHORT — Where did we fall below our own standard?
+   Not to shame — to name. What pattern emerged that the Manifesto didn't address?
+
+${ar('→')} WHAT HAS CHANGED — The children are older. The family has grown.
+   What needs updating? What new principle should we add?
+   What can now be removed because it is lived, not stated?
+
+${ar('→')} RENEWAL — Write a revised MISSION statement and updated VALUES list
+   based on who the ${wrap(fam)} family has become this year.
+
+${ar('→')} INTENTION SETTING — For the coming year, what is the ONE thing
+   this family must do differently? The one practice, the one commitment,
+   the one area of growth that matters most right now.
+
+Output the review as a structured document we can save alongside the original.
+End with a du'a in Arabic and English for the year ahead.`;
+}
+
+// ── PLAY 02: CHILD PROFILES ────────────────────
+function renderChildPrompts() {
+  const ch = children[currentChild];
+  const fam = v('family-name');
+  const father = v('father-name');
+  const mother = v('mother-name');
+
+  // Part 1 — Parent Assessment
+  document.getElementById('p-child-parent').innerHTML =
+`${h('PART 1 — PARENT ASSESSMENT: ' + ch.name.toUpperCase() + ' ' + fam.toUpperCase())}
+${h('INSTRUCTIONS: Complete this honestly. Do not share with the child. Complete Part 2 independently.')}
+
+Child: ${wrap(ch.name + ' ' + fam)} · Age: ${wrap(ch.age)} · DOB: ${wrap(ch.dob)}
+Assessed by: ${wrap(father)} and/or ${wrap(mother)}
+Date of assessment: [TODAY'S DATE]
+
+${h('SPHERE 1 — COGNITIVE & INTELLECTUAL')}
+${ar('→')} Learning style (how do they absorb best — visual, hands-on, auditory, discussion?):
+${ar('→')} Academic strengths (subjects, skills, areas of obvious ability):
+${ar('→')} Academic challenges (not weaknesses — areas needing more support):
+${ar('→')} Curiosity patterns (what do they ask about unprompted? What obsesses them?):
+${ar('→')} Current reading level and reading habits:
+${ar('→')} Problem-solving style (how do they approach difficulty?):
+
+${h('SPHERE 2 — PHYSICAL & SPORTS')}
+${ar('→')} Current sports/physical activities:
+${ar('→')} Coordination, fitness, energy levels:
+${ar('→')} Competitive or collaborative in sport?
+${ar('→')} Any physical health patterns to note:
+${ar('→')} Their relationship with their body (confidence, body image, self-care habits):
+
+${h('SPHERE 3 — FAITH & DEEN')}
+${ar('→')} Quran — current level, how many surahs memorised, quality of tajweed:
+${ar('→')} Salah — praying independently? How consistently?
+${ar('→')} Their understanding of Islam (surface ritual or internalized faith?):
+${ar('→')} Questions they ask about deen — their current spiritual curiosity:
+${ar('→')} Any faith struggles or doubts you have noticed:
+${ar('→')} Acts of worship they gravitate toward naturally (du'a, sadaqah, fasting?):
+
+${h('SPHERE 4 — CHARACTER & ETHICS')}
+${ar('→')} Their strongest character traits (at their best):
+${ar('→')} Their most persistent character challenges (not defects — patterns to develop):
+${ar('→')} How they handle: frustration / failure / unfairness:
+${ar('→')} How they treat: siblings / friends / strangers / adults in authority:
+${ar('→')} Their relationship with honesty:
+${ar('→')} Their relationship with responsibility:
+
+${h('SPHERE 5 — SOCIAL & EMOTIONAL')}
+${ar('→')} Social style (introvert/extrovert, leader/follower, peacemaker/challenger):
+${ar('→')} Quality of friendships — depth, loyalty, influence:
+${ar('→')} Emotional awareness (do they name feelings? Act them out?):
+${ar('→')} How they give and receive love:
+${ar('→')} Anything in their emotional world you are watching or concerned about:
+
+${h('SPHERE 6 — ENTREPRENEURSHIP & INITIATIVE')}
+${ar('→')} Have they shown any initiative in creating, building, or leading anything?
+${ar('→')} How do they respond to challenge vs comfort?
+${ar('→')} Money awareness — do they understand value, earning, saving?
+${ar('→')} What problems do they notice in the world around them?
+${ar('→')} Any early signal of what they might be called toward?
+
+${h('FINAL QUESTIONS FOR THE PARENT')}
+${ar('→')} What does ${wrap(ch.name)} need most from you right now that they are not getting?
+${ar('→')} Where are you most proud of who they are becoming?
+${ar('→')} What is the one thing, if it changed, that would change everything for this child?`;
+
+  // Part 2 — Child Self-Report
+  const isYoung = ch.age <= 7;
+  document.getElementById('p-child-self').innerHTML =
+`${h('PART 2 — CHILD SELF-REPORT: ' + ch.name.toUpperCase())}
+${isYoung ? h('NOTE: FOR YOUNG CHILDREN (AGE 6-7) — A PARENT ASKS THESE AS QUESTIONS. CHILD ANSWERS VERBALLY. PARENT WRITES.') : h('NOTE: CHILD COMPLETES THIS INDEPENDENTLY (WITH PARENT NEARBY)')}
+
+Hi ${wrap(ch.name)}! These questions are just for you. There are no wrong answers.
+You are ${wrap(ch.age)} years old. Your answers will help us understand you better so we can support you more.
+
+${h('ABOUT LEARNING')}
+${ar('→')} What is your favourite thing to learn about?
+${ar('→')} What subject at school makes you feel smart?
+${ar('→')} What is something you find difficult that you wish was easier?
+${ar('→')} If you could learn ANYTHING in the world, what would you choose?
+
+${h('ABOUT YOUR BODY & SPORTS')}
+${ar('→')} What sports or physical activities do you love?
+${ar('→')} Is there a sport you want to try that you haven't started yet?
+${ar('→')} How does your body feel when you exercise?
+
+${h('ABOUT DEEN & FAITH')}
+${ar('→')} What is your favourite thing about being Muslim?
+${ar('→')} What question do you have about Allah or Islam?
+${ar('→')} Which surah or du'a is your favourite, and why?
+${ar('→')} How do you feel when you make salah?
+${isYoung ? '' : `${ar('→')} Is there anything about deen that confuses or worries you?`}
+
+${h('ABOUT YOUR CHARACTER')}
+${ar('→')} What are you really good at as a person (not just skills — who you ARE)?
+${ar('→')} What is one thing about yourself you want to improve?
+${ar('→')} When was the last time you felt really proud of yourself? What happened?
+${ar('→')} How do you feel when someone treats you unfairly?
+${ar('→')} What makes you a good friend / sibling?
+
+${h('ABOUT YOUR FEELINGS')}
+${ar('→')} What makes you really happy?
+${ar('→')} What makes you feel worried or scared?
+${ar('→')} Who do you talk to when something is bothering you?
+${ar('→')} What do you wish your parents understood about you better?
+
+${h('ABOUT YOUR FUTURE')}
+${ar('→')} What do you want to be when you grow up? (You can have more than one answer!)
+${ar('→')} What problem in the world do you most want to fix?
+${ar('→')} If you were in charge of our next family holiday, where would we go?
+${isYoung ? '' : `${ar('→')} What is one goal you want to achieve before your next birthday?`}
+
+${h('ONE LAST THING')}
+${ar('→')} If you could tell Mama and Baba anything right now, what would it be?`;
+
+  // Part 3 — Synthesis
+  document.getElementById('p-child-synth').innerHTML =
+`${h('PART 3 — AI SYNTHESIS: BUILD THE COMPLETE PROFILE FOR ' + ch.name.toUpperCase())}
+
+[PASTE PART 1 — PARENT ASSESSMENT RESPONSES HERE]
+[PASTE PART 2 — CHILD SELF-REPORT RESPONSES HERE]
+
+${h('INSTRUCTIONS FOR CLAUDE:')}
+Using the above parent assessment and child self-report, build a complete holistic profile
+for ${wrap(ch.name + ' ' + fam)}, age ${wrap(ch.age)}.
+
+${ar('→')} SYNTHESIS PRINCIPLE: Where parent and child perception align — that is CONFIRMED TRUTH.
+   Where they diverge — that is the most important developmental territory to explore.
+
+${h('OUTPUT THE FOLLOWING:')}
+
+1. HEADLINE PROFILE (3 sentences — who is ${wrap(ch.name)} right now?)
+
+2. DEVELOPMENT MAP — For each of the 6 spheres:
+   · Current State (honest assessment)
+   · Emerging Strengths (things beginning to crystallise)
+   · Growth Edges (not weaknesses — areas for intentional development)
+   · Parent Action (one specific thing the parents should do about this sphere)
+
+3. THE GAP ANALYSIS
+   · Where is the parent's perception of ${wrap(ch.name)} different from ${wrap(ch.name)}'s self-perception?
+   · What does this gap reveal? What conversation does it open?
+
+4. THE CORE NEED
+   · Based on everything above — what is ${wrap(ch.name)}'s single deepest need right now?
+   · Emotional? Intellectual? Spiritual? Relational? Name it precisely.
+
+5. THE CHILD'S SUPERPOWER
+   · The one quality that, if nurtured, will define who ${wrap(ch.name)} becomes.
+   · Write it as a statement they can own.
+
+6. NEXT 6-MONTH FOCUS
+   · Three development priorities — one per priority: Deen, Character, and one Chosen Sphere
+   · Each with a specific, measurable action
+
+7. THE 1:1 AGENDA
+   · Based on this profile, generate the 5 most important conversation topics
+     for ${wrap(father)} or ${wrap(mother)} to explore with ${wrap(ch.name)} in upcoming 1:1s.
+
+8. FAMILY COIN IMPLICATIONS
+   · What chores and responsibilities align with ${wrap(ch.name)}'s profile and age?
+   · What project could ${wrap(ch.name)} be given as a family lead?
+
+Format as a structured Notion-ready document. Use clear section headers.`;
+}
+
+// ── PLAY 03: SHURA ─────────────────────────────
+function renderShura() {
+  const fam = v('family-name');
+  const father = v('father-name');
+  const mother = v('mother-name');
+  const c = children.map(ch => ch.name).join(', ');
+
+  document.getElementById('p-shura-prep').innerHTML =
+`${h('PRE-SHURA PREPARATION — ' + fam.toUpperCase() + ' FAMILY COUNCIL')}
+
+Prepare the agenda for our Monthly Shura meeting.
+
+${h('FAMILY:')}
+Father: ${wrap(father)} · Mother: ${wrap(mother)}
+Children present: ${wrap(c)}
+Meeting date: [INSERT DATE] · Hijri date: [INSERT HIJRI DATE]
+
+${h('CONTEXT — LAST MONTH (FILL IN BEFORE RUNNING):')}
+[What were our 3 goals last month?]
+[What was achieved? What wasn't?]
+[Any significant events, challenges, or wins this month?]
+[Open issues from last Shura?]
+
+${h('GENERATE FOR US:')}
+
+${ar('→')} OPENING DU'A suggestion — appropriate for this month's context
+${ar('→')} WINS TO CELEBRATE — 5 prompts to draw out wins from each family member
+${ar('→')} GOALS REVIEW — How to structure the honest review of last month's 3 goals
+${ar('→')} OPEN AGENDA — 3 questions to surface what's really on everyone's mind
+${ar('→')} NEXT MONTH GOALS — A framework to set 3 family goals for the coming month
+${ar('→')} CHILD PROJECTS — Which child could lead something this month? What project fits their profile?
+${ar('→')} COIN CEREMONY — How to structure the monthly family coin awards
+${ar('→')} CLOSING DU'A suggestion — seal the meeting with intention
+
+Output as a ready-to-run meeting facilitation guide.`;
+
+  document.getElementById('p-shura-log').innerHTML =
+`${h('POST-SHURA LOG — CONVERT TO NOTION ENTRIES')}
+
+Family: ${wrap(fam)} · Meeting date: [DATE] · Attendees: ${wrap(father + ', ' + mother + ', ' + c)}
+Duration: [X minutes]
+
+[PASTE YOUR MEETING NOTES BELOW — ROUGH FORM IS FINE]
+
+${h('STRUCTURE THE ABOVE INTO:')}
+
+${ar('→')} DECISIONS MADE (list every decision with: WHAT was decided / WHO owns it / BY WHEN)
+${ar('→')} ACTIONS ASSIGNED (per person — what did each family member commit to?)
+${ar('→')} GOALS FOR NEXT MONTH (the 3 family goals, clean and specific)
+${ar('→')} OPEN ITEMS (what didn't get resolved? Carry to next Shura)
+${ar('→')} CHILD PROJECTS LAUNCHED (child name, project, timeline, support needed)
+${ar('→')} FAMILY COIN AWARDS (who received what, and why)
+${ar('→')} FAMILY MOOD READING (1 sentence — how was the energy in this meeting?)
+${ar('→')} PARENT NOTE (private — one thing either parent noticed that deserves follow-up)
+
+Output as a clean Notion database entry with all fields formatted for copy-paste.`;
+}
+
+// ── PLAY 04: 1:1 ──────────────────────────────
+function renderOneToOne() {
+  const fam = v('family-name');
+  const father = v('father-name');
+  const mother = v('mother-name');
+  const c = children.map(ch => ch.name).join(' / ');
+
+  document.getElementById('p-one2one-prep').innerHTML =
+`${h('1:1 PREP — ' + fam.toUpperCase() + ' FAMILY')}
+
+I am about to have a 1:1 with one of my children.
+
+${h('SESSION DETAILS:')}
+Parent conducting the 1:1: [${wrap(father)} / ${wrap(mother)}]
+Child: [${wrap(c)}]
+Child's age: [AGE]
+Date: [DATE]
+Last 1:1 was: [DATE or "this is the first one"]
+
+${h('CONTEXT:')}
+[PASTE any notes from the child's profile, last 1:1, or recent observations]
+[Any specific area of concern or celebration going into this session?]
+[Has anything significant happened since the last 1:1?]
+
+${h('GENERATE FOR THIS SESSION:')}
+
+${ar('→')} OPENING — One question to ease them in (not "how was your day")
+${ar('→')} LISTENING PROMPTS — 3 open questions tailored to their age and current profile
+${ar('→')} FAITH TOUCHPOINT — One gentle question about their deen (not a quiz — genuine curiosity)
+${ar('→')} CHALLENGE PROBE — One question to gently surface anything difficult in their world
+${ar('→')} ENCOURAGEMENT — Something specific and true to affirm in this child, right now
+${ar('→')} CLOSE — One question to end on: what they need from me this week
+
+Output as a pocket card I can glance at during the session.`;
+
+  document.getElementById('p-one2one-log').innerHTML =
+`${h('1:1 LOG — ' + fam.toUpperCase() + ' FAMILY')}
+
+Parent: [NAME] · Child: [CHILD NAME] · Date: [DATE]
+
+[PASTE YOUR SESSION NOTES HERE — ROUGH IS FINE]
+
+${h('STRUCTURE INTO NOTION LOG ENTRY:')}
+
+${ar('→')} KEY INSIGHT (the most important thing you learned about this child today)
+${ar('→')} WHAT THEY SHARED (summary — not verbatim, protect their privacy)
+${ar('→')} EMOTIONAL TEMPERATURE (how did they seem? Scale: Closed → Open → Vulnerable)
+${ar('→')} DEEN SIGNAL (any faith-related moment in the conversation?)
+${ar('→')} ACTIONS FOR PARENT (what do you need to do, follow up on, or change?)
+${ar('→')} NEXT 1:1 SEED (the one question to pick up next time)
+${ar('→')} LOVE NOTE (one private note about this child — for your eyes only — to read when things are hard)
+
+Output formatted for Notion. Mark any sensitive items as [PRIVATE].`;
+}
+
+// ── PLAY 05: WEEKLY ────────────────────────────
+function renderWeekly() {
+  const fam = v('family-name');
+  const c = children.map(ch => ch.name).join(', ');
+
+  document.getElementById('p-weekly').innerHTML =
+`${h('FRIDAY FAMILY STANDUP — ' + fam.toUpperCase())}
+${h('15 MINUTES. AFTER JUMU\'AH. THE WEEK IN AND OUT.')}
+
+Family: ${wrap(fam)} · Present: ${wrap(c)} + parents
+Week of: [DATE]
+Hijri date: [DATE] · We are in the month of: [MONTH]
+
+${h('QUICK-FIRE ROUND — ONE ANSWER EACH (60 seconds per person):')}
+
+${ar('→')} ONE WIN from this week (something you did, learned, or became)
+${ar('→')} ONE HARD THING (something difficult — not to fix, just to name)
+${ar('→')} ONE INTENTION for the coming week
+
+${h('FAMILY REVIEW (3 minutes):')}
+${ar('→')} Our 3 goals this month — Red/Yellow/Green each one
+${ar('→')} Any family project update?
+${ar('→')} Upcoming events this week — who needs what from whom?
+
+${h('FAITH MOMENT (2 minutes):')}
+${ar('→')} One parent shares a short reflection, hadith, or ayah relevant to the week
+${ar('→')} One open question for the family to sit with until next Friday
+
+${h('CLOSE:')}
+${ar('→')} Any du'a requests? (family members share needs — all make du'a together)
+${ar('→')} Jumu'ah du'a — eldest child leads
+
+Generate 3 alternative "Faith Moment" reflection prompts appropriate for this Friday.`;
+
+  document.getElementById('p-parent-debrief').innerHTML =
+`${h('PARENT DEBRIEF — PRIVATE — ' + v('father-name').toUpperCase() + ' & ' + v('mother-name').toUpperCase())}
+${h('SUNDAY EVENING. 20 MINUTES. AFTER CHILDREN ARE ASLEEP.')}
+
+Family: ${wrap(v('family-name'))} · Week of: [DATE]
+
+[NOTES FROM THE WEEK — RAW OBSERVATIONS ABOUT EACH CHILD, THE FAMILY STATE, YOUR OWN STATE]
+
+${h('STRUCTURE OUR DEBRIEF:')}
+
+${ar('→')} EACH CHILD — One sentence on where each child is this week:
+   ${children.map(ch => '   ' + ch.name + ': [STATUS]').join('\n')}
+
+${ar('→')} WHAT ARE WE WORRIED ABOUT — As parents, what is on our minds?
+   Not to catastrophise — to name clearly, then release.
+
+${ar('→')} WHAT ARE WE PROUD OF — As a family this week?
+   One specific moment that reminded us why we do this.
+
+${ar('→')} OUR MARRIAGE — One honest sentence about where we are as a couple this week.
+   One thing we need from each other in the coming week.
+
+${ar('→')} OUR OWN DEEN — Did we maintain our own practice this week?
+   Where did we fall short? Where did we grow?
+
+${ar('→')} NEXT WEEK INTENTION — One thing we will do TOGETHER as parents to strengthen the family.
+
+End with a private du'a for your children — not scripted, not formatted.
+Just honest. Between you, and Allah.`;
+}
+
+// ── INIT ───────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('topbar-date').textContent =
+    `PLAYBOOK v1.0 — ${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}`;
+  generateAll();
+});
+
+// ── COPY ───────────────────────────────────────
+const rawTexts = {};
+
+function copyPrompt(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ COPIED';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ COPIED';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
