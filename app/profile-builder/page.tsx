@@ -52,6 +52,39 @@ function freshProfile(): Profile {
   }
 }
 
+// ── Field component defined OUTSIDE to prevent remount on every render ─────
+function Field({ label, value, placeholder, onChange, multi = false, accent }: {
+  label: string; value: string; placeholder: string
+  onChange: (v: string) => void; multi?: boolean; accent: string
+}) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#888', letterSpacing: 1, marginBottom: 6 }}>{label}</label>
+      {multi ? (
+        <textarea
+          rows={3}
+          value={value}
+          placeholder={placeholder}
+          onChange={e => onChange(e.target.value)}
+          style={{ width: '100%', padding: '12px 14px', border: '2px solid #e8e3d8', borderRadius: 10, fontSize: 14, color: '#1a3d28', background: '#faf8f2', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
+          onFocus={e => e.target.style.borderColor = accent}
+          onBlur={e => e.target.style.borderColor = '#e8e3d8'}
+        />
+      ) : (
+        <input
+          type="text"
+          value={value}
+          placeholder={placeholder}
+          onChange={e => onChange(e.target.value)}
+          style={{ width: '100%', padding: '12px 14px', border: '2px solid #e8e3d8', borderRadius: 10, fontSize: 14, color: '#1a3d28', background: '#faf8f2', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          onFocus={e => e.target.style.borderColor = accent}
+          onBlur={e => e.target.style.borderColor = '#e8e3d8'}
+        />
+      )}
+    </div>
+  )
+}
+
 export default function ProfileBuilderPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -357,36 +390,7 @@ export default function ProfileBuilderPage() {
     )
   }
 
-  function Field({ label, value, placeholder, onChange, multi = false }: {
-    label: string; value: string; placeholder: string; onChange: (v: string) => void; multi?: boolean
-  }) {
-    return (
-      <div style={{ marginBottom: 14 }}>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#888', letterSpacing: 1, marginBottom: 6 }}>{label}</label>
-        {multi ? (
-          <textarea
-            rows={3}
-            value={value}
-            placeholder={placeholder}
-            onChange={e => onChange(e.target.value)}
-            style={{ width: '100%', padding: '12px 14px', border: '2px solid #e8e3d8', borderRadius: 10, fontSize: 14, color: '#1a3d28', background: '#faf8f2', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
-            onFocus={e => e.target.style.borderColor = accent}
-            onBlur={e => e.target.style.borderColor = '#e8e3d8'}
-          />
-        ) : (
-          <input
-            type="text"
-            value={value}
-            placeholder={placeholder}
-            onChange={e => onChange(e.target.value)}
-            style={{ width: '100%', padding: '12px 14px', border: '2px solid #e8e3d8', borderRadius: 10, fontSize: 14, color: '#1a3d28', background: '#faf8f2', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
-            onFocus={e => e.target.style.borderColor = accent}
-            onBlur={e => e.target.style.borderColor = '#e8e3d8'}
-          />
-        )}
-      </div>
-    )
-  }
+  // Field is defined outside this component (above) to prevent remount on each render
 
   const cardStyle: React.CSSProperties = {
     background: '#fff', border: '1px solid #e8e3d8', borderRadius: 20,
@@ -403,9 +407,9 @@ export default function ProfileBuilderPage() {
           <div style={cardStyle}>
             <h2 style={{ fontSize: 20, color: '#1a3d28', marginBottom: 6 }}>Tell us about yourself {member.emoji}</h2>
             <p style={{ color: '#6b7c6e', fontSize: 13, marginBottom: 20 }}>A few words about who you are.</p>
-            <Field label="MY BIO" value={profile.bio} placeholder={member.age ? `I'm ${member.name}, I'm ${member.age} and I love…` : `I'm ${member.name} and I…`} onChange={v => updateProfile({ bio: v })} multi />
-            <Field label="MY SUPERPOWER IS…" value={profile.superpower} placeholder="e.g. Making people smile, solving hard problems…" onChange={v => updateProfile({ superpower: v })} />
-            <Field label="I LOVE…" value={profile.love} placeholder="e.g. Football on Saturday, reading after Isha…" onChange={v => updateProfile({ love: v })} />
+            <Field label="MY BIO" value={profile.bio} placeholder={member.age ? `I'm ${member.name}, I'm ${member.age} and I love…` : `I'm ${member.name} and I…`} onChange={v => updateProfile({ bio: v })} multi accent={accent} />
+            <Field label="MY SUPERPOWER IS…" value={profile.superpower} placeholder="e.g. Making people smile, solving hard problems…" onChange={v => updateProfile({ superpower: v })} accent={accent} />
+            <Field label="I LOVE…" value={profile.love} placeholder="e.g. Football on Saturday, reading after Isha…" onChange={v => updateProfile({ love: v })} accent={accent} />
             <NavRow onNext={() => setStep(2)} />
           </div>
         )}
@@ -475,9 +479,9 @@ export default function ProfileBuilderPage() {
           <div style={cardStyle}>
             <h2 style={{ fontSize: 20, color: '#1a3d28', marginBottom: 6 }}>What are you working towards? 🎯</h2>
             <p style={{ color: '#6b7c6e', fontSize: 13, marginBottom: 20 }}>Your goals help us support you.</p>
-            <Field label="📅 THIS MONTH I WANT TO…" value={profile.goals.month} placeholder="e.g. Read 2 books, improve my free kick…" onChange={v => updateProfile({ goals: { ...profile.goals, month: v } })} />
-            <Field label="🎯 THIS YEAR I WANT TO…" value={profile.goals.year} placeholder="e.g. Memorise Surah Mulk, make the school team…" onChange={v => updateProfile({ goals: { ...profile.goals, year: v } })} />
-            <Field label="🌠 MY BIG DREAM IS…" value={profile.goals.dream} placeholder="e.g. Become a doctor, build something amazing…" onChange={v => updateProfile({ goals: { ...profile.goals, dream: v } })} multi />
+            <Field label="📅 THIS MONTH I WANT TO…" value={profile.goals.month} placeholder="e.g. Read 2 books, improve my free kick…" onChange={v => updateProfile({ goals: { ...profile.goals, month: v } })} accent={accent} />
+            <Field label="🎯 THIS YEAR I WANT TO…" value={profile.goals.year} placeholder="e.g. Memorise Surah Mulk, make the school team…" onChange={v => updateProfile({ goals: { ...profile.goals, year: v } })} accent={accent} />
+            <Field label="🌠 MY BIG DREAM IS…" value={profile.goals.dream} placeholder="e.g. Become a doctor, build something amazing…" onChange={v => updateProfile({ goals: { ...profile.goals, dream: v } })} multi accent={accent} />
             <NavRow onNext={() => setStep(4)} />
           </div>
         )}
