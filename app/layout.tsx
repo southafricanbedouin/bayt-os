@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Crimson_Pro, IBM_Plex_Mono, Amiri } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const crimsonPro = Crimson_Pro({
@@ -37,6 +38,7 @@ export default function RootLayout({
         className={`${crimsonPro.variable} ${ibmPlexMono.variable} ${amiri.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
