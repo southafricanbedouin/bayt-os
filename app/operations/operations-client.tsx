@@ -13,7 +13,7 @@ export default function OperationsClient() {
         description="Everything needed to run Bayt Seedat smoothly — from the weekly shop to travel planning. The logistics backbone of family life."
         modules={[
           { icon: '🛒', name: 'Shopping & Household', desc: 'Grocery lists, household supplies, recurring purchases, and spending tracker.',                    status: 'building' },
-          { icon: '⚡', name: 'Utilities Tracker',    desc: 'Electricity (kWh + Kahramaa bills), water, internet — monthly costs and consumption trends.',      status: 'live' },
+          { icon: '⚡', name: 'Utilities Tracker',    desc: 'B26 Al Reem Gardens, Al Wajba · Vodafone 2GBPS · Ooredoo mobile · electricity (Kahramaa) — monthly fixed and variable costs.',      status: 'live' },
           { icon: '🍽️', name: 'Meal Planning',        desc: 'Weekly meal planner, family recipe bank, halal restaurant finder in Doha, and dietary notes.',    status: 'soon' },
           { icon: '✈️', name: 'Travel Planning',      desc: 'Trip planning, itineraries, visa tracking, budget, packing lists — school holidays and family trips.', status: 'soon' },
           { icon: '🎡', name: 'Family Outings',       desc: 'Doha outings log, upcoming events, weekend planner, and family activity suggestions.',              status: 'soon' },
