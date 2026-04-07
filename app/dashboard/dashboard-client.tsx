@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ExpensesTracker from './expenses-tracker'
 import { Sidebar, SIDEBAR_W } from '@/app/components/sidebar-layout'
+import PrayerWidget from './prayer-widget'
 
 interface Profile {
   id: string
@@ -398,6 +399,9 @@ export default function DashboardClient({ profile, family, goals, userId }: Prop
 
         {/* Content */}
         <div style={{ padding:'2rem 2rem 3rem' }}>
+
+          {/* Prayer times widget */}
+          <PrayerWidget />
 
           {/* Page header */}
           <div style={{ marginBottom:'2rem' }}>
