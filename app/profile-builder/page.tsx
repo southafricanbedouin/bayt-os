@@ -308,7 +308,15 @@ export default function ProfileBuilderPage() {
               </button>
             ))}
           </div>
-          <div style={{ marginTop: 24, padding: '12px 16px', background: '#fff', border: '1px solid #e8e3d8', borderRadius: 12, textAlign: 'center' }}>
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#888', fontFamily: 'inherit', padding: '8px 16px', textDecoration: 'underline' }}
+            >
+              Skip → Go to Bayt OS Home
+            </button>
+          </div>
+          <div style={{ marginTop: 12, padding: '12px 16px', background: '#fff', border: '1px solid #e8e3d8', borderRadius: 12, textAlign: 'center' }}>
             <p style={{ fontSize: 12, color: '#6b7c6e', margin: 0 }}>
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ — This profile is private to our family
             </p>
