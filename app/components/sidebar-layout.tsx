@@ -23,45 +23,55 @@ const F_MONO   = 'var(--font-mono), monospace'
 const F_ARABIC = 'var(--font-arabic), serif'
 export const SIDEBAR_W = 220
 
-// ── Nav groups ──────────────────────────────────────────────────────────
-const NAV: { section: string; items: { icon: string; label: string; path: string; external?: boolean }[] }[] = [
+// ── Nav types ────────────────────────────────────────────────────────────
+type SubItem = { icon: string; label: string; path: string; external?: boolean }
+type NavItem = { icon: string; label: string; path: string; external?: boolean; children?: SubItem[] }
+type NavGroup = { section: string; items: NavItem[] }
+
+// ── Nav definition ────────────────────────────────────────────────────────
+const NAV: NavGroup[] = [
   {
     section: 'Core',
     items: [
-      { icon: '🏠', label: 'Home',          path: '/dashboard' },
-      { icon: '👨‍👩‍👧‍👦', label: 'Family',        path: '/people' },
-      { icon: '📅', label: 'Calendar',      path: 'https://calendar.google.com/calendar/r', external: true },
+      { icon: '🏠', label: 'Home',         path: '/dashboard' },
+      { icon: '👨‍👩‍👧‍👦', label: 'Family',       path: '/people' },
+      { icon: '📅', label: 'Calendar',     path: 'https://calendar.google.com/calendar/r', external: true },
     ],
   },
   {
     section: 'Layers',
     items: [
-      { icon: '📜', label: 'Constitution',  path: '/constitution' },
-      { icon: '🕐', label: 'Rhythm',        path: '/rhythm' },
-      { icon: '🏡', label: 'Operations',    path: '/operations' },
-      { icon: '📖', label: 'Development',   path: '/development' },
-      { icon: '💰', label: 'Economy',       path: '/economy' },
-      { icon: '🪙', label: 'Family Coin',   path: '/family-coin' },
-      { icon: '🤲', label: 'Sadaqah',       path: '/sadaqa' },
-      { icon: '📊', label: 'Savings Goals', path: '/savings' },
-      { icon: '🚀', label: 'Projects',      path: '/projects' },
-      { icon: '📸', label: 'Memory',        path: '/memory' },
+      { icon: '📜', label: 'Constitution', path: '/constitution' },
+      { icon: '🕐', label: 'Rhythm',       path: '/rhythm' },
+      { icon: '🏡', label: 'Operations',   path: '/operations' },
+      { icon: '📖', label: 'Development',  path: '/development' },
+      {
+        icon: '💰', label: 'Economy', path: '/economy',
+        children: [
+          { icon: '🪙', label: 'Family Coin',   path: '/family-coin' },
+          { icon: '🤲', label: 'Sadaqah',       path: '/sadaqa' },
+          { icon: '📊', label: 'Savings Goals', path: '/savings' },
+        ],
+      },
+      { icon: '🚀', label: 'Projects',     path: '/projects' },
+      { icon: '📸', label: 'Memory',       path: '/memory' },
     ],
   },
   {
     section: 'System',
     items: [
-      { icon: '📁', label: 'Notion',        path: 'https://www.notion.so/0e0bea2f459f479a877fec4e116abb07', external: true },
-      { icon: '✏️', label: 'Edit Profile',  path: '/profile-builder' },
+      { icon: '📁', label: 'Notion',       path: 'https://www.notion.so/0e0bea2f459f479a877fec4e116abb07', external: true },
+      { icon: '✏️', label: 'Edit Profile', path: '/profile-builder' },
     ],
   },
 ]
 
-// ── Single nav item ────────────────────────────────────────────────────
-function NavItem({
-  icon, label, path, active, external, onClick,
+// ── Plain nav item ────────────────────────────────────────────────────────
+function NavRow({
+  icon, label, path, active, external, indent = false, onClick,
 }: {
-  icon: string; label: string; path: string; active: boolean; external?: boolean; onClick?: () => void
+  icon: string; label: string; path: string; active: boolean
+  external?: boolean; indent?: boolean; onClick?: () => void
 }) {
   const [hov, setHov] = useState(false)
   const router = useRouter()
@@ -79,18 +89,100 @@ function NavItem({
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: '0.7rem',
-        padding: '0.52rem 1.4rem',
-        fontSize: '0.82rem', fontFamily: F_SANS,
-        color: active ? C.gold : hov ? C.goldPale : 'rgba(232,213,163,0.6)',
+        padding: indent ? '0.42rem 1.4rem 0.42rem 2.6rem' : '0.52rem 1.4rem',
+        fontSize: indent ? '0.76rem' : '0.82rem',
+        fontFamily: F_SANS,
+        color: active ? C.gold : hov ? C.goldPale : indent ? 'rgba(232,213,163,0.45)' : 'rgba(232,213,163,0.6)',
         cursor: 'pointer',
         borderLeft: active ? `2px solid ${C.gold}` : '2px solid transparent',
         background: (active || hov) ? 'rgba(255,255,255,0.07)' : 'transparent',
         transition: 'all 0.15s',
       }}
     >
-      <span style={{ fontSize: '0.88rem', width: 16, textAlign: 'center' }}>{icon}</span>
+      <span style={{ fontSize: indent ? '0.78rem' : '0.88rem', width: 16, textAlign: 'center', opacity: indent ? 0.8 : 1 }}>{icon}</span>
       {label}
       {external && <span style={{ fontSize: 9, opacity: 0.4, marginLeft: 'auto' }}>↗</span>}
+    </div>
+  )
+}
+
+// ── Expandable nav item (parent + children) ────────────────────────────
+function ExpandableNavRow({
+  item, pathname,
+}: {
+  item: NavItem & { children: SubItem[] }; pathname: string
+}) {
+  const router = useRouter()
+  const childPaths = item.children.map(c => c.path)
+  const anyChildActive = childPaths.some(p => pathname.startsWith(p))
+  const selfActive = pathname === item.path || pathname.startsWith(item.path + '/')
+
+  const [open, setOpen] = useState(anyChildActive)
+  const [hov, setHov] = useState(false)
+
+  const parentActive = selfActive && !anyChildActive
+
+  return (
+    <div>
+      {/* Parent row */}
+      <div
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          display: 'flex', alignItems: 'center',
+          padding: '0.52rem 1.4rem',
+          background: (parentActive || hov) ? 'rgba(255,255,255,0.07)' : 'transparent',
+          borderLeft: parentActive ? `2px solid ${C.gold}` : '2px solid transparent',
+          transition: 'all 0.15s',
+          cursor: 'pointer',
+        }}
+      >
+        {/* Label — navigates to parent page */}
+        <div
+          onClick={() => router.push(item.path)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.7rem', flex: 1,
+            fontSize: '0.82rem', fontFamily: F_SANS,
+            color: parentActive ? C.gold : hov ? C.goldPale : 'rgba(232,213,163,0.6)',
+          }}
+        >
+          <span style={{ fontSize: '0.88rem', width: 16, textAlign: 'center' }}>{item.icon}</span>
+          {item.label}
+        </div>
+
+        {/* Toggle button */}
+        <div
+          onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+          style={{
+            width: 18, height: 18, borderRadius: 4,
+            border: `1px solid rgba(201,168,76,${open ? '0.4' : '0.2'})`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: open ? C.gold : 'rgba(201,168,76,0.4)',
+            fontSize: '0.65rem', fontFamily: F_MONO, fontWeight: 700,
+            transition: 'all 0.15s', flexShrink: 0,
+            background: open ? 'rgba(201,168,76,0.1)' : 'transparent',
+          }}
+        >
+          {open ? '−' : '+'}
+        </div>
+      </div>
+
+      {/* Children */}
+      {open && (
+        <div style={{ overflow: 'hidden' }}>
+          {item.children.map(child => (
+            <NavRow
+              key={child.path}
+              icon={child.icon}
+              label={child.label}
+              path={child.path}
+              external={child.external}
+              active={pathname.startsWith(child.path)}
+              indent
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -129,22 +221,26 @@ export function Sidebar({ displayName }: { displayName?: string }) {
             <div style={{ fontFamily: F_MONO, fontSize: '0.48rem', letterSpacing: '0.3em', color: 'rgba(201,168,76,0.45)', padding: '0.3rem 1.4rem 0.25rem', textTransform: 'uppercase' }}>
               {group.section}
             </div>
-            {group.items.map(item => (
-              <NavItem
-                key={item.path}
-                icon={item.icon}
-                label={item.label}
-                path={item.path}
-                external={item.external}
-                active={!item.external && (item.path === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.path))}
-              />
-            ))}
+            {group.items.map(item =>
+              item.children ? (
+                <ExpandableNavRow key={item.path} item={item as NavItem & { children: SubItem[] }} pathname={pathname} />
+              ) : (
+                <NavRow
+                  key={item.path}
+                  icon={item.icon}
+                  label={item.label}
+                  path={item.path}
+                  external={item.external}
+                  active={!item.external && (item.path === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.path))}
+                />
+              )
+            )}
           </div>
         ))}
 
         {/* Sign out */}
         <div style={{ padding: '0 0 0.8rem' }}>
-          <NavItem
+          <NavRow
             icon="🚪"
             label={signingOut ? 'Signing out…' : 'Sign Out'}
             path=""
