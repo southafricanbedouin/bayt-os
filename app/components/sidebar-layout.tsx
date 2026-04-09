@@ -77,6 +77,7 @@ const NAV: NavGroup[] = [
           { icon: '📊', label: 'Savings Goals', path: '/savings' },
           { icon: '💳', label: 'Budget',         path: '/budget' },
           { icon: '🔁', label: 'Subscriptions', path: '/subscriptions' },
+          { icon: '🏦', label: 'Assets',         path: '/assets' },
           { icon: '₿',  label: 'Crypto' },
         ],
       },
