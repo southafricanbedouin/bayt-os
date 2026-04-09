@@ -43,7 +43,17 @@ const NAV: NavGroup[] = [
     section: 'Layers',
     items: [
       { icon: '📜', label: 'Constitution',  path: '/constitution' },
-      { icon: '🕐', label: 'Rhythm',        path: '/rhythm' },
+      {
+        icon: '🕐', label: 'Rhythm', path: '/rhythm',
+        children: [
+          { icon: '☀️', label: 'Daily Rhythm',     path: '/daily-rhythm' },
+          { icon: '🕌', label: "Jumu'ah Review",   path: '/jummah' },
+          { icon: '🗣️', label: 'Monthly Council',  path: '/monthly-council' },
+          { icon: '📅', label: 'Annual Planning',  path: '/annual-planning' },
+          { icon: '🕐', label: 'Prayer Times',     path: '/prayer-times' },
+          { icon: '🏫', label: 'School Calendar',  path: '/school-calendar' },
+        ],
+      },
       {
         icon: '🏡', label: 'Operations', path: '/operations',
         children: [
@@ -61,12 +71,13 @@ const NAV: NavGroup[] = [
       {
         icon: '📖', label: 'Development', path: '/development',
         children: [
-          { icon: '🕌', label: 'Deen' },
-          { icon: '💪', label: 'Health & Fitness' },
-          { icon: '📚', label: 'Education' },
-          { icon: '🌿', label: 'Character' },
-          { icon: '💡', label: 'Entrepreneurship' },
-          { icon: '📝', label: 'Reading & Books' },
+          { icon: '🕌', label: 'Deen',             path: '/deen' },
+          { icon: '💪', label: 'Health & Fitness',  path: '/fitness' },
+          { icon: '📚', label: 'Education',         path: '/education' },
+          { icon: '🌿', label: 'Character',         path: '/character' },
+          { icon: '💡', label: 'Entrepreneurship',  path: '/entrepreneurship' },
+          { icon: '📝', label: 'Reading & Books',   path: '/reading' },
+          { icon: '🧪', label: 'Assessments',       path: '/assessments' },
         ],
       },
       {
@@ -84,15 +95,26 @@ const NAV: NavGroup[] = [
       {
         icon: '🚀', label: 'Projects', path: '/projects',
         children: [
-          { icon: '🕋', label: 'Hajj Planning' },
-          { icon: '🌍', label: 'Summer Trip' },
-          { icon: '👦', label: "Yahya's Project" },
-          { icon: '🏃', label: "Isa's Project" },
-          { icon: '🏡', label: 'Bayt Seedat App', path: '/dashboard' },
-          { icon: '📖', label: "Dad's Book (SAB)" },
+          { icon: '🕋', label: 'Hajj Planning',      path: '/hajj' },
+          { icon: '🌍', label: 'Summer Trip',        path: '/summer-trip' },
+          { icon: '👦', label: "Yahya's Project",    path: '/yahya-project' },
+          { icon: '🏃', label: "Isa's Project",      path: '/isa-project' },
+          { icon: '🏡', label: 'Bayt Seedat App',    path: '/dashboard' },
+          { icon: '📖', label: "Dad's Book",         path: '/sab' },
         ],
       },
-      { icon: '📸', label: 'Memory', path: '/memory' },
+      {
+        icon: '📸', label: 'Memory', path: '/memory',
+        children: [
+          { icon: '✉️', label: 'Letters to Children', path: '/memory' },
+          { icon: '🏆', label: 'Milestones & Stories' },
+          { icon: '📚', label: 'Knowledge Archive' },
+          { icon: '📷', label: 'Photo Memories' },
+          { icon: '🌳', label: 'Family Tree' },
+          { icon: '🎙️', label: 'Voice Notes' },
+        ],
+      },
+      { icon: '📊', label: 'Reports',     path: '/reports' },
     ],
   },
   {
