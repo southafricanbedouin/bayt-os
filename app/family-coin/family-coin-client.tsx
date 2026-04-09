@@ -34,6 +34,7 @@ interface CoinBalance {
   coins: number     // spendable balance
   savings: number   // saved coins
   sadaqah: number   // total given
+  cashQar: number   // real QAR cash savings
 }
 
 interface CoinTransaction {
@@ -61,6 +62,13 @@ const DEFAULT_CHILDREN: Child[] = [
   { id: 'linah', name: 'Linah', age: 6 },
   { id: 'dana',  name: 'Dana',  age: 4 },
 ]
+
+const DEFAULT_CASH: Record<string, number> = {
+  yahya: 800,
+  isa:   260,
+  linah: 250,
+  dana:  250,
+}
 
 const DEFAULT_CHORES: Chore[] = [
   { id: '1',  icon: '🛏️', name: 'Make bed', coins: 2, assignedTo: ['yahya', 'isa', 'linah', 'dana'], active: true },
@@ -138,6 +146,14 @@ function ChildCard({ child, balance, transactions, onAward }: { child: Child; ba
         </div>
       </div>
 
+      <div style={{ background: 'rgba(201,168,76,0.07)', border: `1px solid rgba(201,168,76,0.2)`, borderRadius: 6, padding: '0.6rem 0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontFamily: F_MONO, fontSize: '0.4rem', color: C.goldDim, letterSpacing: '0.12em' }}>CASH SAVINGS</div>
+          <div style={{ fontSize: '1.05rem', color: C.gold, fontFamily: F_MONO, fontWeight: 700, marginTop: 2 }}>QAR {balance.cashQar.toLocaleString()}</div>
+        </div>
+        <div style={{ fontSize: '1.3rem' }}>💵</div>
+      </div>
+
       <div>
         <div style={{ fontFamily: F_MONO, fontSize: '0.4rem', color: C.grey, marginBottom: 4 }}>LAST 3 ACTIVITY</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -196,8 +212,16 @@ export default function FamilyCoinTracker() {
       const savedChores = localStorage.getItem('bayt-coin-chores-v1')
       const savedChildren = localStorage.getItem('bayt-coin-children-v1')
 
-      if (savedBalances) setBalances(JSON.parse(savedBalances))
-      else setBalances(DEFAULT_CHILDREN.map(c => ({ childId: c.id, coins: 0, savings: 0, sadaqah: 0 })))
+      if (savedBalances) {
+        // Migrate: add cashQar if missing from saved data
+        const parsed: CoinBalance[] = JSON.parse(savedBalances)
+        setBalances(parsed.map(b => ({
+          ...b,
+          cashQar: b.cashQar ?? DEFAULT_CASH[b.childId] ?? 0,
+        })))
+      } else {
+        setBalances(DEFAULT_CHILDREN.map(c => ({ childId: c.id, coins: 0, savings: 0, sadaqah: 0, cashQar: DEFAULT_CASH[c.id] ?? 0 })))
+      }
 
       if (savedTransactions) setTransactions(JSON.parse(savedTransactions))
       if (savedChores) setChores(JSON.parse(savedChores))
@@ -584,6 +608,35 @@ export default function FamilyCoinTracker() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div style={{ borderTop: `1px solid ${C.ruleLight}`, paddingTop: '2rem' }}>
+              <SectionHeader>Cash Savings (QAR)</SectionHeader>
+              <p style={{ fontSize: '0.78rem', color: C.grey, fontFamily: F_SANS, marginBottom: '1rem' }}>
+                Real-money savings for each child. Adjust when you deposit or withdraw cash.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                {children.map(child => {
+                  const bal = balances.find(b => b.childId === child.id)
+                  return (
+                    <div key={child.id} style={{ border: `1px solid rgba(201,168,76,0.25)`, borderRadius: 8, padding: '0.9rem 1rem', background: 'rgba(201,168,76,0.05)' }}>
+                      <label style={{ display: 'block', fontFamily: F_MONO, fontSize: '0.45rem', color: C.goldDim, marginBottom: 6 }}>{child.name.toUpperCase()} — CASH QAR</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontFamily: F_MONO, fontSize: '0.85rem', color: C.grey }}>QAR</span>
+                        <input
+                          type="number"
+                          value={bal?.cashQar ?? 0}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0
+                            setBalances(prev => prev.map(b => b.childId === child.id ? { ...b, cashQar: val } : b))
+                          }}
+                          style={{ flex: 1, padding: '0.4rem 0.6rem', fontFamily: F_MONO, fontSize: '0.9rem', fontWeight: 700, borderRadius: 4, border: `1px solid ${C.ruleLight}`, color: C.gold, background: C.white }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
