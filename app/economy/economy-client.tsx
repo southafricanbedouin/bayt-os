@@ -25,7 +25,8 @@ const ECONOMY_MODULES = [
   {
     icon: '🪙', name: 'Family Coin',
     desc: 'Chores → earnings → savings. The kids earn coins for completing tasks, learn to save, spend, and give.',
-    status: 'building' as const,
+    status: 'live' as const,
+    path: '/family-coin',
   },
   {
     icon: '🤲', name: 'Sadaqah Ledger',
@@ -55,7 +56,7 @@ const ECONOMY_MODULES = [
 ]
 
 const statusStyle = {
-  live:     { bg: 'rgba(76,175,80,0.1)',    color: '#4CAF50', border: 'rgba(76,175,80,0.25)',    label: 'LIVE' },
+  live:     { bg: 'rgba(76,175,80,0.1)',    color: '#4CAF50', border: 'rgba(76,175,80,0.25)',    label: 'LIVE →' },
   building: { bg: 'rgba(201,168,76,0.1)',   color: C.gold,    border: 'rgba(201,168,76,0.25)',   label: 'BUILDING' },
   soon:     { bg: 'rgba(107,124,110,0.08)', color: C.grey,    border: C.ruleLight,               label: 'IN DEVELOPMENT' },
 }
@@ -143,8 +144,13 @@ export default function EconomyClient() {
 
             {ECONOMY_MODULES.map(m => {
               const s = statusStyle[m.status]
+              const isClickable = m.status === 'live' && 'path' in m
               return (
-                <div key={m.name} style={{ background: C.white, border: `1px solid ${C.ruleLight}`, borderRadius: 8, padding: '1.2rem 1.4rem', position: 'relative', overflow: 'hidden', opacity: m.status === 'soon' ? 0.8 : 1 }}>
+                <div
+                  key={m.name}
+                  onClick={() => isClickable && router.push((m as typeof m & { path: string }).path)}
+                  style={{ background: C.white, border: `1px solid ${C.ruleLight}`, borderRadius: 8, padding: '1.2rem 1.4rem', position: 'relative', overflow: 'hidden', opacity: m.status === 'soon' ? 0.8 : 1, cursor: isClickable ? 'pointer' : 'default' }}
+                >
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${C.gold} 0%, transparent 70%)`, opacity: m.status === 'soon' ? 0.2 : 0.5 }} />
                   <div style={{ fontSize: '1.5rem', marginBottom: '0.6rem' }}>{m.icon}</div>
                   <div style={{ fontSize: '0.9rem', color: C.text, fontFamily: F_SANS, fontWeight: 600, marginBottom: '0.3rem' }}>{m.name}</div>
