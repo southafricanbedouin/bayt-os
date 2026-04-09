@@ -37,7 +37,8 @@ const ECONOMY_MODULES = [
   {
     icon: '💳', name: 'Budget Planner',
     desc: 'Monthly household budget across all categories: food, transport, activities, clothing, and savings.',
-    status: 'soon' as const,
+    status: 'live' as const,
+    path: '/budget',
   },
   {
     icon: '📊', name: 'Savings Goals',
@@ -48,7 +49,8 @@ const ECONOMY_MODULES = [
   {
     icon: '🔁', name: 'Subscriptions',
     desc: 'All monthly and annual subscriptions in one place — schools, clubs, streaming, gym, apps.',
-    status: 'soon' as const,
+    status: 'live' as const,
+    path: '/subscriptions',
   },
   {
     icon: '₿', name: 'Phase 2: Crypto',
