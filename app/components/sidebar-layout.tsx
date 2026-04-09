@@ -42,6 +42,8 @@ const NAV: { section: string; items: { icon: string; label: string; path: string
       { icon: '📖', label: 'Development',   path: '/development' },
       { icon: '💰', label: 'Economy',       path: '/economy' },
       { icon: '🪙', label: 'Family Coin',   path: '/family-coin' },
+      { icon: '🤲', label: 'Sadaqah',       path: '/sadaqa' },
+      { icon: '📊', label: 'Savings Goals', path: '/savings' },
       { icon: '🚀', label: 'Projects',      path: '/projects' },
       { icon: '📸', label: 'Memory',        path: '/memory' },
     ],

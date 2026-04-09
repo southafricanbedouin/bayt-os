@@ -31,7 +31,8 @@ const ECONOMY_MODULES = [
   {
     icon: '🤲', name: 'Sadaqah Ledger',
     desc: 'Track the family\'s charitable giving — what was given, to whom, and the intention behind it.',
-    status: 'soon' as const,
+    status: 'live' as const,
+    path: '/sadaqa',
   },
   {
     icon: '💳', name: 'Budget Planner',
@@ -41,7 +42,8 @@ const ECONOMY_MODULES = [
   {
     icon: '📊', name: 'Savings Goals',
     desc: 'Family savings targets — Hajj fund, emergency reserve, holiday fund, and education savings.',
-    status: 'soon' as const,
+    status: 'live' as const,
+    path: '/savings',
   },
   {
     icon: '🔁', name: 'Subscriptions',
