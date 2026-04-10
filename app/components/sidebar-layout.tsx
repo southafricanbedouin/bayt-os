@@ -74,9 +74,9 @@ const NAV: NavGroup[] = [
           { icon: '🍽️', label: 'Meal Planning',   path: '/meals' },
           { icon: '✈️', label: 'Travel',           path: '/travel' },
           { icon: '🎡', label: 'Family Outings',   path: '/outings' },
-          { icon: '🚗', label: 'Transport' },
-          { icon: '💊', label: 'Medical' },
-          { icon: '🏫', label: 'School' },
+          { icon: '🚗', label: 'Transport',    path: '/transport' },
+          { icon: '💊', label: 'Medical',      path: '/health' },
+          { icon: '🏫', label: 'School',       path: '/school' },
         ],
       },
       {
