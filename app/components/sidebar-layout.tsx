@@ -44,6 +44,17 @@ const NAV: NavGroup[] = [
     items: [
       { icon: '📜', label: 'Constitution',  path: '/constitution' },
       {
+        icon: '🗂️', label: 'Documents', path: '/documents',
+        children: [
+          { icon: '🛂', label: 'Passports',           path: '/documents' },
+          { icon: '🪪', label: 'IDs & QIDs',          path: '/documents' },
+          { icon: '✈️', label: 'Visas',               path: '/documents' },
+          { icon: '🚗', label: 'Driving Licences',    path: '/documents' },
+          { icon: '📜', label: 'Birth Certificates',  path: '/documents' },
+          { icon: '📁', label: 'Drive Folders',       path: '/documents' },
+        ],
+      },
+      {
         icon: '🕐', label: 'Rhythm', path: '/rhythm',
         children: [
           { icon: '☀️', label: 'Daily Rhythm',     path: '/daily-rhythm' },
