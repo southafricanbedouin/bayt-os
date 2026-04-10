@@ -278,20 +278,29 @@ export function Sidebar({ displayName }: { displayName?: string }) {
 
   return (
     <nav style={{
-      width: SIDEBAR_W, minHeight: '100vh',
+      width: SIDEBAR_W, height: '100vh',
       background: C.green, borderRight: '1px solid rgba(0,0,0,0.08)',
       display: 'flex', flexDirection: 'column',
       position: 'fixed', top: 0, left: 0, zIndex: 100,
+      overflow: 'hidden',
     }}>
+      {/* Scrollbar styling */}
+      <style>{`
+        .bayt-nav-scroll::-webkit-scrollbar { width: 4px; }
+        .bayt-nav-scroll::-webkit-scrollbar-track { background: transparent; }
+        .bayt-nav-scroll::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.25); border-radius: 2px; }
+        .bayt-nav-scroll::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.5); }
+      `}</style>
+
       {/* Logo */}
-      <div style={{ padding: '1.6rem 1.4rem 1.2rem', borderBottom: `1px solid ${C.rule}` }}>
+      <div style={{ padding: '1.6rem 1.4rem 1.2rem', borderBottom: `1px solid ${C.rule}`, flexShrink: 0 }}>
         <span style={{ fontFamily: F_ARABIC, fontSize: '1.6rem', color: C.gold, lineHeight: 1, display: 'block' }}>بيت</span>
         <span style={{ fontFamily: F_MONO, fontSize: '0.6rem', letterSpacing: '0.25em', color: 'rgba(201,168,76,0.7)', marginTop: '0.3rem', display: 'block' }}>BAYT OS · v0.1</span>
         <span style={{ fontFamily: F_MONO, fontSize: '0.55rem', letterSpacing: '0.15em', color: 'rgba(232,213,163,0.4)', marginTop: '0.2rem', display: 'block' }}>Seedat Family · Doha</span>
       </div>
 
       {/* Nav */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '0.5rem' }}>
+      <div className="bayt-nav-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '0.5rem', scrollbarWidth: 'thin', scrollbarColor: 'rgba(201,168,76,0.25) transparent' }}>
         {NAV.map(group => (
           <div key={group.section} style={{ padding: '0.8rem 0' }}>
             <div style={{ fontFamily: F_MONO, fontSize: '0.48rem', letterSpacing: '0.3em', color: 'rgba(201,168,76,0.45)', padding: '0.3rem 1.4rem 0.25rem', textTransform: 'uppercase' }}>
@@ -333,8 +342,8 @@ export function Sidebar({ displayName }: { displayName?: string }) {
         </div>
       </div>
 
-      {/* Phase badge */}
-      <div style={{ margin: '0 1.1rem 1.2rem', background: C.forest, border: `1px solid ${C.ruleLight}`, borderRadius: 6, padding: '0.75rem 0.9rem' }}>
+      {/* Phase badge — pinned to bottom */}
+      <div style={{ margin: '0 1.1rem 1.2rem', background: C.forest, border: `1px solid ${C.ruleLight}`, borderRadius: 6, padding: '0.75rem 0.9rem', flexShrink: 0 }}>
         <div style={{ fontFamily: F_MONO, fontSize: '0.47rem', letterSpacing: '0.18em', color: C.goldDim }}>CURRENT PHASE</div>
         <div style={{ fontSize: '0.82rem', color: C.gold, fontWeight: 600, margin: '0.2rem 0 0.35rem', fontFamily: F_SANS }}>Phase 1 — Foundation</div>
         <div style={{ height: 3, background: C.ruleLight, borderRadius: 2, overflow: 'hidden' }}>
