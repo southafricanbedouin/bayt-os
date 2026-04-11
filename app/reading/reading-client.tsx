@@ -56,13 +56,28 @@ export default function ReadingBooks() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data: bData } = await supabase.from('books').select('*').order('created_at', { ascending: false })
-      const { data: sData } = await supabase.from('reading_sessions').select('*')
-      
-      setBooks(bData?.length ? bData : JSON.parse(localStorage.getItem('bayt-books-v1') || '[]'))
-      setSessions(sData?.length ? sData : JSON.parse(localStorage.getItem('bayt-reading-sessions-v1') || '[]'))
+      const { data: bData, error: bErr } = await supabase.from('books').select('*').order('created_at', { ascending: false })
+      const { data: sData, error: sErr } = await supabase.from('reading_sessions').select('*')
+
+      // Use Supabase as source of truth. Fall back to localStorage only if the query errors.
+      if (\!bErr && bData \!== null) {
+        setBooks(bData)
+        localStorage.setItem('bayt-books-v1', JSON.stringify(bData)) // keep local cache fresh
+      } else {
+        setBooks(JSON.parse(localStorage.getItem('bayt-books-v1') || '[]'))
+      }
+
+      if (\!sErr && sData \!== null) {
+        setSessions(sData)
+        localStorage.setItem('bayt-reading-sessions-v1', JSON.stringify(sData))
+      } else {
+        setSessions(JSON.parse(localStorage.getItem('bayt-reading-sessions-v1') || '[]'))
+      }
     } catch (e) {
       console.error(e)
+      // Network error — use cached data
+      setBooks(JSON.parse(localStorage.getItem('bayt-books-v1') || '[]'))
+      setSessions(JSON.parse(localStorage.getItem('bayt-reading-sessions-v1') || '[]'))
     }
     setLoading(false)
   }
@@ -82,7 +97,10 @@ export default function ReadingBooks() {
     localStorage.setItem('bayt-books-v1', JSON.stringify(updated))
     setShowBookForm(false)
     setBookForm({ member_id: 'yahya', title: '', author: '', category: 'Fiction', pages_total: '', status: 'to-read' })
-    try { await supabase.from('books').insert(newBook) } catch(e) {}
+    try {
+      const { error } = await supabase.from('books').insert(newBook)
+      if (error) console.error('Book insert failed:', error)
+    } catch(e) { console.error('Book insert error:', e) }
   }
 
   const logSession = async (bookId: string, memberId: string) => {
@@ -111,9 +129,11 @@ export default function ReadingBooks() {
       setBooks(updatedBooks)
       localStorage.setItem('bayt-books-v1', JSON.stringify(updatedBooks))
       try {
-        await supabase.from('reading_sessions').insert(newSession)
-        await supabase.from('books').update({ pages_read: newPages }).eq('id', bookId)
-      } catch(e) {}
+        const { error: sErr } = await supabase.from('reading_sessions').insert(newSession)
+        const { error: bErr } = await supabase.from('books').update({ pages_read: newPages }).eq('id', bookId)
+        if (sErr) console.error('Session insert failed:', sErr)
+        if (bErr) console.error('Book pages update failed:', bErr)
+      } catch(e) { console.error('logSession sync error:', e) }
     }
     
     setLogForm(prev => ({ ...prev, [bookId]: { pages: '', duration: '', notes: '' } }))

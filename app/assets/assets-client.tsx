@@ -141,10 +141,9 @@ export default function AssetsRepository() {
     }
   }
 
-  const saveState = async (newAssets: Asset[]) => {
+  const saveState = (newAssets: Asset[]) => {
     setAssets(newAssets)
     localStorage.setItem('bayt-assets-v1', JSON.stringify(newAssets))
-    // Supabase sync omitted for UI preview speed, but structure is ready.
   }
 
   const handleCalculateEstimate = () => {
@@ -154,11 +153,11 @@ export default function AssetsRepository() {
     }
   }
 
-  const saveForm = () => {
+  const saveForm = async () => {
     if (!form.name || !form.purchase_price || !form.purchase_date) return
 
     const newAsset: Asset = {
-      id: editingId || Date.now().toString(),
+      id: editingId || crypto.randomUUID(),
       name: form.name || 'Unnamed Asset',
       icon: form.icon || '📦',
       category: form.category || 'Other',
@@ -169,14 +168,17 @@ export default function AssetsRepository() {
       notes: form.notes || ''
     }
 
-    let updated
-    if (editingId) {
-      updated = assets.map(a => a.id === editingId ? newAsset : a)
-    } else {
-      updated = [newAsset, ...assets]
-    }
+    const updated = editingId
+      ? assets.map(a => a.id === editingId ? newAsset : a)
+      : [newAsset, ...assets]
 
     saveState(updated)
+
+    // Sync to Supabase so all family members see the change
+    try {
+      await supabase.from('assets').upsert(newAsset, { onConflict: 'id' })
+    } catch (e) { console.error('Asset sync failed:', e) }
+
     setIsAdding(false)
     setEditingId(null)
     setForm({})
@@ -188,9 +190,12 @@ export default function AssetsRepository() {
     setIsAdding(true)
   }
 
-  const deleteAsset = (id: string) => {
+  const deleteAsset = async (id: string) => {
     if (confirm('Are you sure you want to remove this asset?')) {
-      saveState(assets.filter(a => a.id !== id))
+      saveState(assets.filter(a => a.id \!== id))
+      try {
+        await supabase.from('assets').delete().eq('id', id)
+      } catch (e) { console.error('Asset delete failed:', e) }
     }
   }
 
