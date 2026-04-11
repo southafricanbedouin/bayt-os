@@ -209,8 +209,8 @@ function BugReportForm({ onSubmit }: { onSubmit: () => void }) {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '0.6rem 0.8rem',
-    background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.rule}`,
-    borderRadius: 6, color: C.cream, fontFamily: F_SANS, fontSize: '0.85rem',
+    background: C.white, border: `1px solid ${C.rule}`,
+    borderRadius: 6, color: C.text, fontFamily: F_SANS, fontSize: '0.85rem',
     outline: 'none', boxSizing: 'border-box',
   }
   const labelStyle: React.CSSProperties = {
@@ -223,6 +223,8 @@ function BugReportForm({ onSubmit }: { onSubmit: () => void }) {
       <div>
         <label style={labelStyle}>TITLE *</label>
         <input style={inputStyle} value={title} onChange={e => setTitle(e.target.value)}
+          onFocus={e => e.target.style.borderColor = C.gold}
+          onBlur={e => e.target.style.borderColor = C.rule}
           placeholder="Brief description of the issue" required />
       </div>
       <div>
@@ -243,13 +245,18 @@ function BugReportForm({ onSubmit }: { onSubmit: () => void }) {
         </div>
         <div>
           <label style={labelStyle}>REPORTED BY</label>
-          <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
+          <input style={inputStyle} value={name} onChange={e => setName(e.target.value)}
+            onFocus={e => e.target.style.borderColor = C.gold}
+            onBlur={e => e.target.style.borderColor = C.rule}
+            placeholder="Your name" />
         </div>
       </div>
       <div>
         <label style={labelStyle}>DETAILS</label>
         <textarea style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }} value={desc}
           onChange={e => setDesc(e.target.value)}
+          onFocus={e => e.target.style.borderColor = C.gold}
+          onBlur={e => e.target.style.borderColor = C.rule}
           placeholder="Steps to reproduce, what you expected vs what happened…" />
       </div>
       <button type="submit" disabled={saving || !title.trim()}
