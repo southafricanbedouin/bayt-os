@@ -158,9 +158,27 @@ export default function UserProfile({ memberId, isOwnProfile, isParent }: { memb
   const school = CHILD_SCHOOLS[memberId]
   const avatarLetter = profile.display_name?.charAt(0).toUpperCase() || '?'
 
+  const isNewUser = !profile.bio || profile.bio === 'Building the foundation.' || !profile.interests || profile.interests.length === 0
+
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', fontFamily: F_SANS }}>
-      
+
+      {isNewUser && (
+        <div style={{ background: 'linear-gradient(135deg, #f0e4c0 0%, #faf8f2 100%)', border: `2px solid ${C.gold}`, borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ fontSize: '2rem', flexShrink: 0 }}>🎉</div>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: C.text, fontWeight: 600 }}>Welcome to Bayt OS!</h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: C.green }}>Complete your profile to unlock more features and show your personality to the family.</p>
+          </div>
+          <button
+            onClick={() => setIsEditingProfile(true)}
+            style={{ background: C.green, color: C.white, border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontFamily: F_MONO, fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
+          >
+            COMPLETE PROFILE
+          </button>
+        </div>
+      )}
+
       <header style={{ background: C.white, border: `1px solid ${C.ruleLight}`, borderRadius: '12px', padding: '2rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: isChild ? C.blue : C.goldDim }} />
         

@@ -137,7 +137,7 @@ const NAV: NavGroup[] = [
     items: [
       { icon: '👤', label: 'My Profile',    path: '/profile' },
       { icon: '📁', label: 'Notion',        path: 'https://www.notion.so/0e0bea2f459f479a877fec4e116abb07', external: true },
-      { icon: '✏️', label: 'Edit Profiles', path: '/profile-builder' },
+      { icon: '⚙️',  label: 'Settings',     path: '/settings' },
     ],
   },
 ]

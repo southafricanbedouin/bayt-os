@@ -37,9 +37,9 @@ export async function GET(request: NextRequest) {
         .eq('id', user.id)
         .single()
 
-      if (!profile || !profile.profile_complete) {
-        return NextResponse.redirect(new URL('/profile-builder', request.url))
-      }
+      // Redirect to /profile to allow optional profile completion
+      // Users can complete profile later if they choose
+      return NextResponse.redirect(new URL('/profile', request.url))
     }
   }
 
