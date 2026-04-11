@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import SidebarLayout from '@/app/components/sidebar-layout'
 import SettingsClient from './settings-client'
+import SettingsPageWrapper from './settings-page-wrapper'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -29,7 +30,10 @@ export default async function SettingsPage() {
 
   return (
     <SidebarLayout title="SETTINGS">
-      <SettingsClient currentUser={profile} allProfiles={allProfiles || []} />
+      <SettingsPageWrapper
+        currentUser={profile}
+        allProfiles={allProfiles || []}
+      />
     </SidebarLayout>
   )
 }
