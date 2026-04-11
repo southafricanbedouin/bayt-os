@@ -192,7 +192,7 @@ export default function AssetsRepository() {
 
   const deleteAsset = async (id: string) => {
     if (confirm('Are you sure you want to remove this asset?')) {
-      saveState(assets.filter(a => a.id \!== id))
+      saveState(assets.filter(a => a.id !== id))
       try {
         await supabase.from('assets').delete().eq('id', id)
       } catch (e) { console.error('Asset delete failed:', e) }

@@ -60,14 +60,14 @@ export default function ReadingBooks() {
       const { data: sData, error: sErr } = await supabase.from('reading_sessions').select('*')
 
       // Use Supabase as source of truth. Fall back to localStorage only if the query errors.
-      if (\!bErr && bData \!== null) {
+      if (!bErr && bData !== null) {
         setBooks(bData)
         localStorage.setItem('bayt-books-v1', JSON.stringify(bData)) // keep local cache fresh
       } else {
         setBooks(JSON.parse(localStorage.getItem('bayt-books-v1') || '[]'))
       }
 
-      if (\!sErr && sData \!== null) {
+      if (!sErr && sData !== null) {
         setSessions(sData)
         localStorage.setItem('bayt-reading-sessions-v1', JSON.stringify(sData))
       } else {
