@@ -114,7 +114,7 @@ const NAV: NavGroup[] = [
           { icon: '🌍', label: 'Summer Trip',     path: '/summer-trip' },
           { icon: '👦', label: "Yahya's Project", path: '/yahya-project' },
           { icon: '🏃', label: "Isa's Project",   path: '/isa-project' },
-          { icon: '🏡', label: 'Bayt Seedat App', path: '/dashboard' },
+          { icon: '🏡', label: 'Bayt Seedat App', path: '/bayt-os-project' },
           { icon: '📖', label: "Dad's Book",      path: '/sab' },
         ],
       },
@@ -137,7 +137,7 @@ const NAV: NavGroup[] = [
     items: [
       { icon: '👤', label: 'My Profile',    path: '/profile' },
       { icon: '📁', label: 'Notion',        path: 'https://www.notion.so/0e0bea2f459f479a877fec4e116abb07', external: true },
-      { icon: '✏️', label: 'Edit Profile',  path: '/profile-builder' },
+      { icon: '✏️', label: 'Edit Profiles', path: '/profile-builder' },
     ],
   },
 ]

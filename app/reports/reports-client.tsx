@@ -396,7 +396,7 @@ export default function ReportsDashboard() {
                   <div key={r.id} style={{ border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: C.white, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '0.2rem' }}>{r.period_label}</div>
-                      <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.grey, textTransform: 'uppercase' }}>{r.report_type.replace('_', ' ')} · {new Date(r.created_at).toLocaleDateString()}</div>
+                      <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.grey, textTransform: 'uppercase' }}>{(r.report_type || '').replace('_', ' ')} · {new Date(r.created_at).toLocaleDateString()}</div>
                     </div>
                     <button onClick={() => setExpandedReport(expandedReport === r.id ? null : r.id)} style={{ background: 'none', border: `1px solid ${C.rule}`, padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', color: C.text }}>
                       {expandedReport === r.id ? 'Close' : 'View'}

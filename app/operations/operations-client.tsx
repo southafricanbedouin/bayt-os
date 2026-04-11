@@ -12,7 +12,15 @@ export default function OperationsClient() {
         arabic="الإدارة"
         description="Everything needed to run Bayt Seedat smoothly — from the weekly shop to travel planning. The logistics backbone of family life."
         modules={[
-          { icon: '🛒', name: 'Shopping & Household', desc: 'Grocery lists, household supplies, recurring purchases, and spending tracker.',                    status: 'live', path: '/shopping' },
+          { icon: '🛒', name: 'Shopping & Household', desc: 'Grocery lists, household supplies, recurring purchases, and spending tracker.',                     status: 'live', path: '/shopping' },
+          { icon: '⚡', name: 'Utilities Tracker',   desc: 'B26 Al Reem Gardens · Vodafone 2GBPS · Ooredoo mobile · Kahramaa — monthly fixed and variable costs.',     status: 'live', path: '/operations' },
+          { icon: '🍽️', name: 'Meal Planning',       desc: 'Weekly meal planner, family recipe bank, halal restaurant finder in Doha, and dietary notes.',             status: 'live', path: '/meals' },
+          { icon: '✈️', name: 'Travel Planning',     desc: 'Trip planning, itineraries, visa tracking, budget, packing lists — school holidays and family trips.',      status: 'live', path: '/travel' },
+          { icon: '🎡', name: 'Family Outings',      desc: 'Doha outings log, upcoming events, weekend planner, and family activity suggestions.',                      status: 'live', path: '/outings' },
+          { icon: '🚗', name: 'Transport & Vehicles',desc: 'Vehicle maintenance log, school run schedule, and driver coordination.',                                    status: 'live', path: '/transport' },
+          { icon: '💊', name: 'Medical & Health',    desc: 'Family health records, vaccination schedules, doctor appointments, and prescriptions.',                     status: 'live', path: '/health' },
+          { icon: '🔁', name: 'Subscriptions',       desc: 'Monthly and annual subscriptions tracker — Netflix, gym, schools, clubs — with renewal reminders.',         status: 'live', path: '/subscriptions' },
+          { icon: '🏫', name: 'School Management',   desc: 'Doha College & QFS homework, assignments, parent communication, and school admin.',                         status: 'live', path: '/school' },
           { icon: '⚡', name: 'Utilities Tracker',    desc: 'B26 Al Reem Gardens, Al Wajba · Vodafone 2GBPS · Ooredoo mobile · electricity (Kahramaa) — monthly fixed and variable costs.',      status: 'live' },
           { icon: '🍽️', name: 'Meal Planning',        desc: 'Weekly meal planner, family recipe bank, halal restaurant finder in Doha, and dietary notes.',    status: 'soon' },
           { icon: '✈️', name: 'Travel Planning',      desc: 'Trip planning, itineraries, visa tracking, budget, packing lists — school holidays and family trips.', status: 'soon' },
