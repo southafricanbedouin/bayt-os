@@ -18,11 +18,6 @@ export default function RhythmClient() {
           { icon: '📅', name: 'Annual Planning',  desc: 'Year-start intention setting, Ramadan preparation, school year planning, and legacy goal-setting.',           status: 'live', path: '/annual-planning' },
           { icon: '⏰', name: 'Prayer Times',     desc: 'Live Doha Salah times — Fajr, Dhuhr, Asr, Maghrib, Isha — synced to the family calendar.',                  status: 'live', path: '/prayer-times' },
           { icon: '📆', name: 'School Calendar',  desc: 'Doha College & QFS term dates, exam schedules, holidays, and school events in one view.',                    status: 'live', path: '/school-calendar' },
-          { icon: '🕌', name: 'Jumu\'ah Review',     desc: 'The weekly family check-in — wins, struggles, gratitude, and intentions for the week ahead.',                 status: 'live', path: '/daily-rhythm' },
-          { icon: '📋', name: 'Monthly Council',     desc: 'The Shura session — family decisions, goal reviews, and accountability for the month.',                       
-          { icon: '📅', name: 'Annual Planning',     desc: 'Year-start intention setting, Ramadan preparation, school year planning, and legacy goal-setting.',           
-          { icon: '⏰', name: 'Prayer Times',        desc: 'Live Doha Salah times — Fajr, Dhuhr, Asr, Maghrib, Isha — synced to the family calendar.',                  
-          { icon: '📆', name: 'School Calendar',     desc: 'Doha College & QFS term dates, exam schedules, holidays, and school events in one view.',                    
         ]}
       />
     </SidebarLayout>
