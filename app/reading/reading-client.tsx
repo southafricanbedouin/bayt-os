@@ -230,9 +230,9 @@ export default function ReadingBooks() {
   }
 
   const filteredResources = resources.filter(r => {
-    const matchesSearch = r.title.toLowerCase().includes(librarySearch.toLowerCase()) ||
-                          r.author?.toLowerCase().includes(librarySearch.toLowerCase()) ||
-                          r.description?.toLowerCase().includes(librarySearch.toLowerCase())
+    const matchesSearch = (r.title?.toLowerCase() || '').includes(librarySearch.toLowerCase()) ||
+                          (r.author?.toLowerCase() || '').includes(librarySearch.toLowerCase()) ||
+                          (r.description?.toLowerCase() || '').includes(librarySearch.toLowerCase())
     const matchesCategory = libraryFilters.category === 'All' || r.category === libraryFilters.category || r.categories?.includes(libraryFilters.category)
     const matchesAge = libraryFilters.ageGroup === 'All Ages' || r.ageGroups?.includes(libraryFilters.ageGroup) || r.ageGroups?.includes('All Ages')
     return matchesSearch && matchesCategory && matchesAge
