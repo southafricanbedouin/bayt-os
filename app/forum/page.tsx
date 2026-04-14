@@ -8,9 +8,18 @@ export default async function ForumPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Fetch user profile to get their member ID
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, full_name, relationship')
+    .eq('id', user.id)
+    .single()
+
+  const memberId = profile?.id || user.id
+
   return (
     <SidebarLayout title="FAMILY FORUM">
-      <FamilyForum />
+      <FamilyForum currentUserId={memberId} />
     </SidebarLayout>
   )
 }

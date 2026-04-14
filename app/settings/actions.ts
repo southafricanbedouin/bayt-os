@@ -56,7 +56,7 @@ export async function createUser({
       .from('profiles')
       .select('id')
       .ilike('email', email)
-      .single()
+      .maybe_single()
 
     if (existingUser) {
       return { success: false, error: 'Email already exists' }
@@ -162,7 +162,7 @@ export async function updateUser({
         .select('id')
         .ilike('email', email)
         .neq('id', userId)
-        .single()
+        .maybe_single()
 
       if (existingUser) {
         return { success: false, error: 'Email already exists' }
@@ -366,7 +366,7 @@ export async function bulkImportUsers(
         .from('profiles')
         .select('id')
         .ilike('email', email)
-        .single()
+        .maybe_single()
 
       if (existingUser) {
         failures.push({ row, email, error: 'Email already exists' })

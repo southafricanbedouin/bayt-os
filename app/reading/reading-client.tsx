@@ -35,17 +35,79 @@ const MEMBERS = [
 
 const CATEGORIES = ['Islamic', 'Fiction', 'Non-fiction', 'Biography', 'Science', 'Children', 'Other']
 const STATUSES = ['to-read', 'reading', 'completed']
+const AGE_GROUPS = ['3-5', '6-8', '9-11', '12-14', '15+', 'All Ages']
+const RESOURCE_TYPES = ['Book', 'Magazine', 'Article', 'Story', 'Audio', 'Interactive']
+
+const CURATED_RESOURCES = [
+  {
+    id: 'qnl-main',
+    name: 'Qatar National Library - Online Resources',
+    url: 'https://www.qnl.qa/en/explore/online-resources',
+    type: 'Library',
+    categories: ['Islamic', 'Fiction', 'Non-fiction', 'Children'],
+    ageGroups: ['All Ages'],
+    description: 'Official QNL platform with thousands of books, magazines, and resources',
+    icon: '📚'
+  },
+  {
+    id: 'pressreader',
+    name: 'PressReader (via QNL)',
+    url: 'https://www-pressreader-com.eres.qnl.qa/catalog',
+    type: 'Magazines & Newspapers',
+    categories: ['Non-fiction'],
+    ageGroups: ['15+', 'All Ages'],
+    description: 'Access to newspapers, magazines, and journals worldwide',
+    icon: '📰'
+  },
+  {
+    id: 'creativebug',
+    name: 'CreativeBug (via QNL)',
+    url: 'https://www-creativebug-com.eres.qnl.qa/lib/qnl',
+    type: 'Learning',
+    categories: ['Science'],
+    ageGroups: ['6-8', '9-11', '12-14', '15+'],
+    description: 'Creative learning with art, craft, and design classes',
+    icon: '🎨'
+  },
+  {
+    id: 'unite-literacy',
+    name: 'Unite for Literacy',
+    url: 'https://www.uniteforliteracy.com/free-books-online/home',
+    type: 'Free Books',
+    categories: ['Fiction', 'Children'],
+    ageGroups: ['3-5', '6-8', '9-11'],
+    description: 'Free bilingual children\'s books - perfect for young readers',
+    icon: '📖'
+  },
+  {
+    id: 'bookflix',
+    name: 'Bookflix (Scholastic)',
+    url: 'https://bookflix.digital.scholastic.com/home?authCtx=',
+    type: 'Interactive Stories',
+    categories: ['Fiction', 'Children'],
+    ageGroups: ['3-5', '6-8', '9-11'],
+    description: 'Animated book companion with video and interactive activities',
+    icon: '🎬'
+  }
+]
 
 export default function ReadingBooks() {
   const [activeTab, setActiveTab] = useState('current')
   const [loading, setLoading] = useState(true)
   const [books, setBooks] = useState<any[]>([])
   const [sessions, setSessions] = useState<any[]>([])
+  const [resources, setResources] = useState<any[]>(CURATED_RESOURCES)
 
   const [showBookForm, setShowBookForm] = useState(false)
   const [bookForm, setBookForm] = useState({ member_id: 'yahya', title: '', author: '', category: 'Fiction', pages_total: '', status: 'to-read' })
-  
+
   const [logForm, setLogForm] = useState<Record<string, { pages: string, duration: string, notes: string }>>({})
+
+  // Library filter states
+  const [showResourceForm, setShowResourceForm] = useState(false)
+  const [resourceForm, setResourceForm] = useState({ title: '', author: '', type: 'Book', url: '', driveUrl: '', category: 'Other', ageGroups: ['All Ages'], addedBy: 'Family' })
+  const [librarySearch, setLibrarySearch] = useState('')
+  const [libraryFilters, setLibraryFilters] = useState({ category: 'All', ageGroup: 'All Ages' })
 
   const supabase = createClient()
 
@@ -152,6 +214,29 @@ export default function ReadingBooks() {
     localStorage.setItem('bayt-books-v1', JSON.stringify(updated))
     try { await supabase.from('books').update({ rating }).eq('id', id) } catch(e) {}
   }
+
+  const saveResource = async () => {
+    if (!resourceForm.title || (!resourceForm.url && !resourceForm.driveUrl)) return
+    const newResource = {
+      id: crypto.randomUUID(),
+      ...resourceForm,
+      created_at: new Date().toISOString()
+    }
+    const updated = [newResource, ...resources.filter(r => !r.id.startsWith('custom-') || r.id.substring(7) !== newResource.id)]
+    setResources(updated)
+    localStorage.setItem('bayt-resources-v1', JSON.stringify(updated))
+    setShowResourceForm(false)
+    setResourceForm({ title: '', author: '', type: 'Book', url: '', driveUrl: '', category: 'Other', ageGroups: ['All Ages'], addedBy: 'Family' })
+  }
+
+  const filteredResources = resources.filter(r => {
+    const matchesSearch = r.title.toLowerCase().includes(librarySearch.toLowerCase()) ||
+                          r.author?.toLowerCase().includes(librarySearch.toLowerCase()) ||
+                          r.description?.toLowerCase().includes(librarySearch.toLowerCase())
+    const matchesCategory = libraryFilters.category === 'All' || r.category === libraryFilters.category || r.categories?.includes(libraryFilters.category)
+    const matchesAge = libraryFilters.ageGroup === 'All Ages' || r.ageGroups?.includes(libraryFilters.ageGroup) || r.ageGroups?.includes('All Ages')
+    return matchesSearch && matchesCategory && matchesAge
+  })
 
   const totalPagesThisMonth = sessions.filter(s => new Date(s.logged_at).getMonth() === new Date().getMonth()).reduce((acc, s) => acc + s.pages_read, 0)
   const booksCompletedThisMonth = books.filter(b => b.status === 'completed' && b.completed_at && new Date(b.completed_at).getMonth() === new Date().getMonth()).length
@@ -353,31 +438,175 @@ export default function ReadingBooks() {
 
         {activeTab === 'library' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>The Family Library</h2>
-              <div style={{ fontSize: '0.85rem', color: C.grey }}>All completed books</div>
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>📚 Family Reading Resources</h2>
+                <button onClick={() => setShowResourceForm(!showResourceForm)} style={primaryBtn}>
+                  {showResourceForm ? 'CANCEL' : 'ADD RESOURCE'}
+                </button>
+              </div>
+
+              {showResourceForm && (
+                <div style={{ background: C.cream, border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <input placeholder="Resource Title" value={resourceForm.title} onChange={e => setResourceForm({...resourceForm, title: e.target.value})} style={inputStyle} />
+                    <input placeholder="Author (optional)" value={resourceForm.author} onChange={e => setResourceForm({...resourceForm, author: e.target.value})} style={inputStyle} />
+                    <select value={resourceForm.type} onChange={e => setResourceForm({...resourceForm, type: e.target.value})} style={inputStyle}>
+                      {RESOURCE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <input placeholder="Web URL (if linking externally)" value={resourceForm.url} onChange={e => setResourceForm({...resourceForm, url: e.target.value})} style={inputStyle} />
+                    <input placeholder="Google Drive link (if storing in Drive)" value={resourceForm.driveUrl} onChange={e => setResourceForm({...resourceForm, driveUrl: e.target.value})} style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <select value={resourceForm.category} onChange={e => setResourceForm({...resourceForm, category: e.target.value})} style={inputStyle}>
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {AGE_GROUPS.map(ag => (
+                        <label key={ag} style={{ display: 'flex', alignItems: 'center', fontSize: '0.8rem', gap: '0.3rem', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={resourceForm.ageGroups.includes(ag)} onChange={e => {
+                            if (e.target.checked) {
+                              setResourceForm({...resourceForm, ageGroups: [...resourceForm.ageGroups, ag]})
+                            } else {
+                              setResourceForm({...resourceForm, ageGroups: resourceForm.ageGroups.filter(a => a !== ag)})
+                            }
+                          }} style={{ cursor: 'pointer' }} />
+                          {ag}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={saveResource} style={primaryBtn}>SAVE RESOURCE</button>
+                </div>
+              )}
+
+              {/* Search & Filters */}
+              <div style={{ background: C.forest, padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                  placeholder="Search resources..."
+                  value={librarySearch}
+                  onChange={e => setLibrarySearch(e.target.value)}
+                  style={{...inputStyle, flex: 1, minWidth: '200px', padding: '0.5rem'}}
+                />
+                <select value={libraryFilters.category} onChange={e => setLibraryFilters({...libraryFilters, category: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All">All Categories</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select value={libraryFilters.ageGroup} onChange={e => setLibraryFilters({...libraryFilters, ageGroup: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All Ages">All Ages</option>
+                  {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                </select>
+                <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.white, background: C.green, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
+                  {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''}
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-              {books.filter(b => b.status === 'completed').sort((a,b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime()).map(b => {
-                const member = MEMBERS.find(m => m.id === b.member_id)?.name
-                return (
-                  <div key={b.id} style={{ border: `1px solid ${b.rating === 5 ? C.gold : C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: b.rating === 5 ? C.goldPale : C.white }}>
-                    {b.rating === 5 && <div style={{ fontSize: '0.7rem', fontFamily: F_MONO, color: C.goldDim, marginBottom: '0.5rem', textTransform: 'uppercase' }}>⭐ Highly Recommended</div>}
-                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: C.text, marginBottom: '0.2rem' }}>{b.title}</div>
-                    <div style={{ fontSize: '0.85rem', color: C.grey, marginBottom: '1rem' }}>by {b.author}</div>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px dashed ${C.ruleLight}`, paddingTop: '1rem' }}>
-                      <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{b.category}</div>
-                      <div style={{ display: 'flex', gap: '2px' }}>
-                        {[1,2,3,4,5].map(star => <span key={star} style={{ color: star <= (b.rating || 0) ? C.goldDim : C.ruleLight, fontSize: '1rem' }}>★</span>)}
+            {/* Resources Grid */}
+            {filteredResources.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                {filteredResources.map(r => (
+                  <div key={r.id} style={{ border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: C.white, transition: 'all 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <div style={{ fontSize: '1.5rem' }}>{r.icon || '📖'}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: '1rem', color: C.text }}>{r.title}</div>
+                        {r.author && <div style={{ fontSize: '0.8rem', color: C.grey }}>by {r.author}</div>}
                       </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: C.grey, marginTop: '0.5rem', textAlign: 'right' }}>Read by {member}</div>
+
+                    {r.description && (
+                      <div style={{ fontSize: '0.8rem', color: C.grey, marginBottom: '1rem', lineHeight: '1.4' }}>
+                        {r.description}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                      <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.white, background: C.green, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                        {r.type}
+                      </span>
+                      {r.category && <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                        {r.category}
+                      </span>}
+                      {r.categories && r.categories.slice(0, 2).map(cat => (
+                        <span key={cat} style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px' }}>
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+
+                    {r.ageGroups && (
+                      <div style={{ fontSize: '0.75rem', color: C.grey, marginBottom: '1rem', paddingBottom: '1rem', borderBottom: `1px dashed ${C.ruleLight}` }}>
+                        <span style={{ fontWeight: 600 }}>Age:</span> {r.ageGroups.join(', ')}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {r.url && (
+                        <a href={r.url} target="_blank" rel="noopener noreferrer" style={{
+                          ...primaryBtn,
+                          flex: 1,
+                          textAlign: 'center',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          padding: '0.5rem'
+                        }}>
+                          Open Link ↗
+                        </a>
+                      )}
+                      {r.driveUrl && (
+                        <a href={r.driveUrl} target="_blank" rel="noopener noreferrer" style={{
+                          ...primaryBtn,
+                          flex: 1,
+                          textAlign: 'center',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          padding: '0.5rem',
+                          background: C.blue
+                        }}>
+                          Drive ↗
+                        </a>
+                      )}
+                    </div>
+
+                    {r.addedBy && <div style={{ fontSize: '0.65rem', color: C.grey, marginTop: '0.5rem', textAlign: 'right', fontStyle: 'italic' }}>
+                      Added by {r.addedBy}
+                    </div>}
                   </div>
-                )
-              })}
-              {books.filter(b => b.status === 'completed').length === 0 && <div style={{ ...emptyState, gridColumn: '1 / -1' }}>The library is waiting. Finish your first book!</div>}
+                ))}
+              </div>
+            ) : (
+              <div style={{ ...emptyState, gridColumn: '1 / -1' }}>
+                No resources match your filters. Try adjusting your search or filters!
+              </div>
+            )}
+
+            {/* Completed Books Section */}
+            <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `2px solid ${C.ruleLight}` }}>
+              <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 300, color: C.text }}>📖 Family's Completed Books</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                {books.filter(b => b.status === 'completed').sort((a,b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime()).map(b => {
+                  const member = MEMBERS.find(m => m.id === b.member_id)?.name
+                  return (
+                    <div key={b.id} style={{ border: `1px solid ${b.rating === 5 ? C.gold : C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: b.rating === 5 ? C.goldPale : C.white }}>
+                      {b.rating === 5 && <div style={{ fontSize: '0.7rem', fontFamily: F_MONO, color: C.goldDim, marginBottom: '0.5rem', textTransform: 'uppercase' }}>⭐ Highly Recommended</div>}
+                      <div style={{ fontWeight: 600, fontSize: '1.1rem', color: C.text, marginBottom: '0.2rem' }}>{b.title}</div>
+                      <div style={{ fontSize: '0.85rem', color: C.grey, marginBottom: '1rem' }}>by {b.author}</div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px dashed ${C.ruleLight}`, paddingTop: '1rem' }}>
+                        <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{b.category}</div>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                          {[1,2,3,4,5].map(star => <span key={star} style={{ color: star <= (b.rating || 0) ? C.goldDim : C.ruleLight, fontSize: '1rem' }}>★</span>)}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: C.grey, marginTop: '0.5rem', textAlign: 'right' }}>Read by {member}</div>
+                    </div>
+                  )
+                })}
+                {books.filter(b => b.status === 'completed').length === 0 && <div style={{ ...emptyState, gridColumn: '1 / -1' }}>Finish reading books to see them here!</div>}
+              </div>
             </div>
           </div>
         )}
