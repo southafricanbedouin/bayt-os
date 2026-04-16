@@ -102,6 +102,8 @@ export default function ReadingBooks() {
   const [books, setBooks] = useState<any[]>([])
   const [sessions, setSessions] = useState<any[]>([])
   const [resources, setResources] = useState<any[]>(CURATED_RESOURCES)
+  const [libraryBooks, setLibraryBooks] = useState<any[]>([])
+  const [currentUserId, setCurrentUserId] = useState('yahya') // TODO: Get from auth
 
   const [showBookForm, setShowBookForm] = useState(false)
   const [bookForm, setBookForm] = useState({ member_id: 'yahya', title: '', author: '', category: 'Fiction', pages_total: '', status: 'to-read' })
@@ -114,6 +116,12 @@ export default function ReadingBooks() {
   const [librarySearch, setLibrarySearch] = useState('')
   const [libraryFilters, setLibraryFilters] = useState({ category: 'All', ageGroup: 'All Ages' })
 
+  // Library books (family book collection)
+  const [showLibraryBookForm, setShowLibraryBookForm] = useState(false)
+  const [libraryBookForm, setLibraryBookForm] = useState({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+  const [libraryBooksSearch, setLibraryBooksSearch] = useState('')
+  const [libraryBooksFilters, setLibraryBooksFilters] = useState({ category: 'All', fiction_nonfiction: 'All', age: 'All Ages' })
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -125,6 +133,7 @@ export default function ReadingBooks() {
     try {
       const { data: bData, error: bErr } = await supabase.from('books').select('*').order('created_at', { ascending: false })
       const { data: sData, error: sErr } = await supabase.from('reading_sessions').select('*')
+      const { data: lbData, error: lbErr } = await supabase.from('library_books').select('*').order('created_at', { ascending: false })
 
       // Use Supabase as source of truth. Fall back to localStorage only if the query errors.
       if (!bErr && bData !== null) {
@@ -140,11 +149,19 @@ export default function ReadingBooks() {
       } else {
         setSessions(JSON.parse(localStorage.getItem('bayt-reading-sessions-v1') || '[]'))
       }
+
+      if (!lbErr && lbData !== null) {
+        setLibraryBooks(lbData)
+        localStorage.setItem('bayt-library-books-v1', JSON.stringify(lbData))
+      } else {
+        setLibraryBooks(JSON.parse(localStorage.getItem('bayt-library-books-v1') || '[]'))
+      }
     } catch (e) {
       console.error(e)
       // Network error — use cached data
       setBooks(JSON.parse(localStorage.getItem('bayt-books-v1') || '[]'))
       setSessions(JSON.parse(localStorage.getItem('bayt-reading-sessions-v1') || '[]'))
+      setLibraryBooks(JSON.parse(localStorage.getItem('bayt-library-books-v1') || '[]'))
     }
     setLoading(false)
   }
@@ -234,6 +251,48 @@ export default function ReadingBooks() {
     setResourceForm({ title: '', author: '', type: 'Book', url: '', driveUrl: '', category: 'Other', ageGroups: ['All Ages'], addedBy: 'Family' })
   }
 
+  const saveLibraryBook = async () => {
+    if (!libraryBookForm.title || !libraryBookForm.author) return
+    const newBook = {
+      id: crypto.randomUUID(),
+      ...libraryBookForm,
+      added_at: new Date().toISOString()
+    }
+    const updated = [newBook, ...libraryBooks]
+    setLibraryBooks(updated)
+    localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
+    setShowLibraryBookForm(false)
+    setLibraryBookForm({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+    try {
+      const { error } = await supabase.from('library_books').insert(newBook)
+      if (error) console.error('Library book insert failed:', error)
+    } catch(e) { console.error('Library book insert error:', e) }
+  }
+
+  const checkoutLibraryBook = async (libraryBook: any) => {
+    // Create a book entry for the current user from this library book
+    const newBook = {
+      id: crypto.randomUUID(),
+      member_id: currentUserId,
+      title: libraryBook.title,
+      author: libraryBook.author,
+      category: libraryBook.category,
+      pages_total: 200, // Default, user can update
+      pages_read: 0,
+      status: 'to-read',
+      rating: 0,
+      created_at: new Date().toISOString(),
+      source_library_book_id: libraryBook.id
+    }
+    const updated = [newBook, ...books]
+    setBooks(updated)
+    localStorage.setItem('bayt-books-v1', JSON.stringify(updated))
+    try {
+      const { error } = await supabase.from('books').insert(newBook)
+      if (error) console.error('Book checkout failed:', error)
+    } catch(e) { console.error('Book checkout error:', e) }
+  }
+
   const filteredResources = resources.filter(r => {
     const matchesSearch = (r.title?.toLowerCase() || '').includes(librarySearch.toLowerCase()) ||
                           (r.author?.toLowerCase() || '').includes(librarySearch.toLowerCase()) ||
@@ -241,6 +300,15 @@ export default function ReadingBooks() {
     const matchesCategory = libraryFilters.category === 'All' || r.category === libraryFilters.category || r.categories?.includes(libraryFilters.category)
     const matchesAge = libraryFilters.ageGroup === 'All Ages' || r.ageGroups?.includes(libraryFilters.ageGroup) || r.ageGroups?.includes('All Ages')
     return matchesSearch && matchesCategory && matchesAge
+  })
+
+  const filteredLibraryBooks = libraryBooks.filter(b => {
+    const matchesSearch = (b.title?.toLowerCase() || '').includes(libraryBooksSearch.toLowerCase()) ||
+                          (b.author?.toLowerCase() || '').includes(libraryBooksSearch.toLowerCase())
+    const matchesCategory = libraryBooksFilters.category === 'All' || b.category === libraryBooksFilters.category
+    const matchesFiction = libraryBooksFilters.fiction_nonfiction === 'All' || b.fiction_nonfiction === libraryBooksFilters.fiction_nonfiction
+    const matchesAge = libraryBooksFilters.age === 'All Ages' || b.age === libraryBooksFilters.age
+    return matchesSearch && matchesCategory && matchesFiction && matchesAge
   })
 
   const totalPagesThisMonth = sessions.filter(s => new Date(s.logged_at).getMonth() === new Date().getMonth()).reduce((acc, s) => acc + s.pages_read, 0)
@@ -276,7 +344,7 @@ export default function ReadingBooks() {
       <div style={{ display: 'flex', background: C.forest, borderBottom: `1px solid ${C.ruleLight}` }}>
         {[
           { id: 'current', label: '📖 Currently Reading' },
-          { id: 'manage', label: '➕ Manage Books' },
+          { id: 'manage', label: '➕ Manage Reading' },
           { id: 'leaderboard', label: '🏆 Leaderboard' },
           { id: 'library', label: '📚 Family Library' }
         ].map(t => (
@@ -337,7 +405,7 @@ export default function ReadingBooks() {
         {activeTab === 'manage' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>Manage Books</h2>
+              <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>Manage Reading</h2>
               <button onClick={() => setShowBookForm(!showBookForm)} style={primaryBtn}>
                 {showBookForm ? 'CANCEL' : 'ADD NEW BOOK'}
               </button>
@@ -587,6 +655,130 @@ export default function ReadingBooks() {
                 No resources match your filters. Try adjusting your search or filters!
               </div>
             )}
+
+            {/* Family Library Books Section */}
+            <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `2px solid ${C.ruleLight}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>📖 Family Book Collection</h2>
+                <button onClick={() => setShowLibraryBookForm(!showLibraryBookForm)} style={primaryBtn}>
+                  {showLibraryBookForm ? 'CANCEL' : 'ADD BOOK'}
+                </button>
+              </div>
+
+              {showLibraryBookForm && (
+                <div style={{ background: C.cream, border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <input placeholder="Book Title" value={libraryBookForm.title} onChange={e => setLibraryBookForm({...libraryBookForm, title: e.target.value})} style={inputStyle} />
+                    <input placeholder="Author" value={libraryBookForm.author} onChange={e => setLibraryBookForm({...libraryBookForm, author: e.target.value})} style={inputStyle} />
+                    <select value={libraryBookForm.fiction_nonfiction} onChange={e => setLibraryBookForm({...libraryBookForm, fiction_nonfiction: e.target.value})} style={inputStyle}>
+                      <option value="Fiction">Fiction</option>
+                      <option value="Non-Fiction">Non-Fiction</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <select value={libraryBookForm.category} onChange={e => setLibraryBookForm({...libraryBookForm, category: e.target.value})} style={inputStyle}>
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select value={libraryBookForm.age} onChange={e => setLibraryBookForm({...libraryBookForm, age: e.target.value})} style={inputStyle}>
+                      {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                    </select>
+                    <input placeholder="URL (optional)" value={libraryBookForm.url} onChange={e => setLibraryBookForm({...libraryBookForm, url: e.target.value})} style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <input placeholder="Google Drive link (optional)" value={libraryBookForm.driveUrl} onChange={e => setLibraryBookForm({...libraryBookForm, driveUrl: e.target.value})} style={inputStyle} />
+                  </div>
+                  <button onClick={saveLibraryBook} style={primaryBtn}>SAVE BOOK</button>
+                </div>
+              )}
+
+              {/* Search & Filters for Library Books */}
+              <div style={{ background: C.forest, padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                  placeholder="Search books..."
+                  value={libraryBooksSearch}
+                  onChange={e => setLibraryBooksSearch(e.target.value)}
+                  style={{...inputStyle, flex: 1, minWidth: '200px', padding: '0.5rem'}}
+                />
+                <select value={libraryBooksFilters.category} onChange={e => setLibraryBooksFilters({...libraryBooksFilters, category: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All">All Categories</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select value={libraryBooksFilters.fiction_nonfiction} onChange={e => setLibraryBooksFilters({...libraryBooksFilters, fiction_nonfiction: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All">All Types</option>
+                  <option value="Fiction">Fiction</option>
+                  <option value="Non-Fiction">Non-Fiction</option>
+                </select>
+                <select value={libraryBooksFilters.age} onChange={e => setLibraryBooksFilters({...libraryBooksFilters, age: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All Ages">All Ages</option>
+                  {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                </select>
+                <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.white, background: C.green, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
+                  {filteredLibraryBooks.length} book{filteredLibraryBooks.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+
+              {/* Library Books Grid */}
+              {filteredLibraryBooks.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+                  {filteredLibraryBooks.map(b => (
+                    <div key={b.id} style={{ border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: C.white }}>
+                      <div style={{ fontWeight: 600, fontSize: '1.1rem', color: C.text, marginBottom: '0.2rem' }}>{b.title}</div>
+                      <div style={{ fontSize: '0.85rem', color: C.grey, marginBottom: '1rem' }}>by {b.author}</div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                        <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                          {b.fiction_nonfiction}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                          {b.category}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.grey, background: C.ruleLight, padding: '0.2rem 0.5rem', borderRadius: '3px' }}>
+                          Age {b.age}
+                        </span>
+                      </div>
+
+                      <button onClick={() => checkoutLibraryBook(b)} style={{ ...primaryBtn, width: '100%', padding: '0.5rem', marginBottom: '0.5rem', background: C.blue }}>
+                        CHECKOUT & ADD TO MY READING
+                      </button>
+
+                      {b.url && (
+                        <a href={b.url} target="_blank" rel="noopener noreferrer" style={{
+                          display: 'block',
+                          textAlign: 'center',
+                          padding: '0.5rem',
+                          fontSize: '0.75rem',
+                          border: `1px solid ${C.rule}`,
+                          borderRadius: '4px',
+                          color: C.blue,
+                          textDecoration: 'none'
+                        }}>
+                          View Online ↗
+                        </a>
+                      )}
+                      {b.driveUrl && (
+                        <a href={b.driveUrl} target="_blank" rel="noopener noreferrer" style={{
+                          display: 'block',
+                          textAlign: 'center',
+                          padding: '0.5rem',
+                          fontSize: '0.75rem',
+                          border: `1px solid ${C.rule}`,
+                          borderRadius: '4px',
+                          color: C.blue,
+                          textDecoration: 'none',
+                          marginTop: '0.3rem'
+                        }}>
+                          Google Drive ↗
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ ...emptyState, marginBottom: '3rem' }}>
+                  No books match your filters. Try adjusting your search!
+                </div>
+              )}
+            </div>
 
             {/* Completed Books Section */}
             <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `2px solid ${C.ruleLight}` }}>
