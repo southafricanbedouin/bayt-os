@@ -455,7 +455,7 @@ export default function DeenTracker() {
                           >
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', flexWrap: 'wrap' }}>
                               {PRAYERS.map(prayer => (
-                                <label
+                                <div
                                   key={prayer}
                                   style={{
                                     display: 'flex',
@@ -465,16 +465,21 @@ export default function DeenTracker() {
                                     padding: '2px 4px',
                                     borderRadius: '4px',
                                     backgroundColor: log?.[prayer] ? C.goldPale : 'transparent',
+                                    pointerEvents: 'auto',
                                   }}
+                                  onClick={() => toggleSalah(member.id, prayer, dateStr)}
                                   title={prayer}
                                 >
                                   <input
                                     type="checkbox"
                                     checked={log?.[prayer] || false}
-                                    onChange={() => toggleSalah(member.id, prayer, dateStr)}
-                                    style={{ cursor: 'pointer', accentColor: C.gold }}
+                                    onChange={(e) => {
+                                      e.stopPropagation()
+                                      toggleSalah(member.id, prayer, dateStr)
+                                    }}
+                                    style={{ cursor: 'pointer', accentColor: C.gold, pointerEvents: 'auto' }}
                                   />
-                                </label>
+                                </div>
                               ))}
                             </div>
                           </td>

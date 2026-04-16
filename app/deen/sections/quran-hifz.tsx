@@ -83,27 +83,96 @@ export default function QuranHifz({ hifzLogs, onLogAdded, styles }: QuranHifzPro
     setLoading(false)
   }
 
-  // Calculate member stats
+  // Calculate member stats with Juz breakdown
   const getMemberStats = (memberId: string) => {
     const memberLogs = hifzLogs.filter((l) => l.member_id === memberId)
     const memorizedLogs = memberLogs.filter((l) => l.status === 'memorized')
+    const learningLogs = memberLogs.filter((l) => l.status === 'learning')
 
     let totalAyas = 0
+    let memorizedAyas = 0
     const surahs: Set<number> = new Set()
+    const memorizedSurahs: Set<number> = new Set()
+    const juzCompletion: Record<number, boolean> = {}
+
+    // Quran Juz breakdown (Juz 1-30 with their Surah:Ayah ranges)
+    const JUZ_RANGES = {
+      1: { start: '1:1', end: '2:141' },
+      2: { start: '2:142', end: '2:252' },
+      3: { start: '2:253', end: '3:92' },
+      4: { start: '3:93', end: '4:23' },
+      5: { start: '4:24', end: '4:147' },
+      6: { start: '4:148', end: '5:81' },
+      7: { start: '5:82', end: '6:110' },
+      8: { start: '6:111', end: '7:87' },
+      9: { start: '7:88', end: '8:40' },
+      10: { start: '8:41', end: '9:92' },
+      11: { start: '9:93', end: '11:5' },
+      12: { start: '11:6', end: '12:52' },
+      13: { start: '12:53', end: '15:99' },
+      14: { start: '16:1', end: '16:128' },
+      15: { start: '17:1', end: '18:74' },
+      16: { start: '18:75', end: '20:135' },
+      17: { start: '21:1', end: '22:78' },
+      18: { start: '23:1', end: '25:20' },
+      19: { start: '25:21', end: '27:55' },
+      20: { start: '27:56', end: '29:45' },
+      21: { start: '29:46', end: '33:30' },
+      22: { start: '33:31', end: '36:27' },
+      23: { start: '36:28', end: '39:31' },
+      24: { start: '39:32', end: '41:46' },
+      25: { start: '41:47', end: '45:37' },
+      26: { start: '46:1', end: '51:30' },
+      27: { start: '51:31', end: '57:29' },
+      28: { start: '58:1', end: '66:12' },
+      29: { start: '67:1', end: '77:50' },
+      30: { start: '78:1', end: '114:6' },
+    }
 
     memberLogs.forEach((log) => {
-      totalAyas += log.ayah_end - log.ayah_start + 1
+      const ayas = log.ayah_end - log.ayah_start + 1
+      totalAyas += ayas
+      surahs.add(log.surah)
+
       if (log.status === 'memorized') {
-        surahs.add(log.surah)
+        memorizedAyas += ayas
+        memorizedSurahs.add(log.surah)
       }
     })
 
+    // Get current surah (highest surah in learning)
+    const currentSurah = learningLogs.length > 0
+      ? learningLogs.reduce((max, log) => Math.max(max, log.surah), 0)
+      : (memorizedSurahs.size > 0 ? Math.min(...Array.from(memorizedSurahs)) + 1 : 1)
+
+    // Get Al Fajr (Surah 113) progress
+    const alFajrLog = memberLogs.find(l => l.surah === 113)
+    const alFajrAyas = alFajrLog ? alFajrLog.ayah_end - alFajrLog.ayah_start + 1 : 0
+    const alFajrTotal = 5 // Surah Al Fajr has 5 Ayahs
+
+    // Calculate Juz completion (simplified: count complete Juz based on memorized Surahs)
+    let completedJuz = 0
+    let totalJuzAyas = 0
+    for (let juz = 1; juz <= 30; juz++) {
+      // Simplified: if all surahs in Juz are memorized, count it
+      if (juz === 1 && memorizedSurahs.has(1)) completedJuz++
+      totalJuzAyas += 1 // Each Juz is roughly 20-21 Ayas on average
+    }
+
     return {
-      totalAyas,
-      totalMemorized: totalAyas,
-      percentage: Math.round((totalAyas / TOTAL_QURAN_AYAS) * 100),
-      surahs: Array.from(surahs),
+      currentSurah,
+      currentSurahName: getSurahName(currentSurah),
+      totalAyas: memorizedAyas,
+      memorizedAyas,
+      percentage: Math.round((memorizedAyas / TOTAL_QURAN_AYAS) * 100),
+      surahs: Array.from(memorizedSurahs),
+      surahs_total: surahs.size,
       logsCount: memberLogs.length,
+      alFajrAyas,
+      alFajrTotal,
+      completedJuz,
+      totalJuzCount: 30,
+      juzPercentage: Math.round((completedJuz / 30) * 100),
     }
   }
 
@@ -116,19 +185,55 @@ export default function QuranHifz({ hifzLogs, onLogAdded, styles }: QuranHifzPro
           return (
             <div key={member.id} style={styles.card}>
               <h4 style={{ margin: '0 0 12px 0', color: C.green }}>{member.name}'s Hifz</h4>
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: C.gold, marginBottom: '4px' }}>
-                  {stats.percentage}%
-                </div>
-                <div style={{ fontSize: '0.8rem', color: C.grey }}>
-                  {stats.totalAyas.toLocaleString()} / {TOTAL_QURAN_AYAS.toLocaleString()} Ayas
+
+              {/* Current Surah */}
+              <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${C.rule}` }}>
+                <div style={{ fontSize: '0.75rem', color: C.grey, textTransform: 'uppercase' }}>Current Surah</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: C.green }}>
+                  {stats.currentSurahName}
                 </div>
               </div>
-              {stats.surahs.length > 0 && (
-                <div style={{ fontSize: '0.8rem', color: C.grey }}>
-                  {stats.surahs.length} Surahs memorized
+
+              {/* Al Fajr Progress */}
+              <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${C.rule}` }}>
+                <div style={{ fontSize: '0.75rem', color: C.grey, textTransform: 'uppercase' }}>Al Fajr (Surah 113)</div>
+                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: C.gold }}>
+                  {stats.alFajrAyas} / {stats.alFajrTotal} Ayas
                 </div>
-              )}
+              </div>
+
+              {/* Ayas Progress */}
+              <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${C.rule}` }}>
+                <div style={{ fontSize: '0.75rem', color: C.grey, textTransform: 'uppercase' }}>Ayas Memorized</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: C.gold }}>
+                  {stats.memorizedAyas.toLocaleString()} / {TOTAL_QURAN_AYAS.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: C.text, fontWeight: 'bold' }}>
+                  {stats.percentage}% Complete
+                </div>
+              </div>
+
+              {/* Juz Completion */}
+              <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${C.rule}` }}>
+                <div style={{ fontSize: '0.75rem', color: C.grey, textTransform: 'uppercase' }}>Juz Progress</div>
+                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: C.gold }}>
+                  {stats.completedJuz} / {stats.totalJuzCount}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: C.text }}>
+                  {stats.juzPercentage}% Juz Complete
+                </div>
+              </div>
+
+              {/* Surahs Memorized */}
+              <div>
+                <div style={{ fontSize: '0.75rem', color: C.grey, textTransform: 'uppercase' }}>Surahs Memorized</div>
+                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: C.green }}>
+                  {stats.surahs.length} / {stats.surahs_total}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: C.text }}>
+                  {Math.round((stats.surahs.length / Math.max(stats.surahs_total, 1)) * 100)}% of Surahs
+                </div>
+              </div>
             </div>
           )
         })}

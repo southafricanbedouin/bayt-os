@@ -127,7 +127,47 @@ export default function ReadingBooks() {
 
   useEffect(() => {
     fetchData()
+    // Auto-sync localStorage books to Supabase on first load
+    syncLocalStorageBooksToSupabase()
   }, [])
+
+  const syncLocalStorageBooksToSupabase = async () => {
+    try {
+      // Check if we have books in localStorage
+      const localBooks = JSON.parse(localStorage.getItem('bayt-library-books-v1') || '[]')
+      if (localBooks.length === 0) return
+
+      // Check if Supabase already has books
+      const { data: existingBooks, error: checkErr } = await supabase.from('library_books').select('id').limit(1)
+      if (checkErr) {
+        console.log('Supabase table not ready yet, will retry on reload')
+        return
+      }
+
+      // If no books in Supabase, sync them
+      if (existingBooks && existingBooks.length === 0) {
+        for (const book of localBooks) {
+          try {
+            await supabase.from('library_books').insert({
+              id: book.id,
+              title: book.title,
+              author: book.author,
+              category: book.category,
+              fiction_nonfiction: book.fiction_nonfiction,
+              age: book.age,
+              url: book.url || null,
+              drive_url: book.driveUrl || null,
+              added_at: book.added_at || new Date().toISOString()
+            })
+          } catch (e) {
+            console.error('Failed to sync book:', book.title, e)
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Sync not critical, books will work from localStorage:', e)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
