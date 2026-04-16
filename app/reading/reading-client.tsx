@@ -123,6 +123,11 @@ export default function ReadingBooks() {
   const [libraryBooksSearch, setLibraryBooksSearch] = useState('')
   const [libraryBooksFilters, setLibraryBooksFilters] = useState({ category: 'All', fiction_nonfiction: 'All', age: 'All Ages' })
 
+  // Checkout modal state
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [checkoutBook, setCheckoutBook] = useState<any>(null)
+  const [selectedMemberId, setSelectedMemberId] = useState('yahya')
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -349,24 +354,37 @@ export default function ReadingBooks() {
     } catch(e) { console.error('Library book delete error:', e) }
   }
 
-  const checkoutLibraryBook = async (libraryBook: any) => {
-    // Create a book entry for the current user from this library book
+  const openCheckoutModal = (libraryBook: any) => {
+    setCheckoutBook(libraryBook)
+    setSelectedMemberId('yahya') // Reset to default
+    setShowCheckoutModal(true)
+  }
+
+  const confirmCheckout = async () => {
+    if (!checkoutBook || !selectedMemberId) return
+
+    // Create a book entry for the selected member
     const newBook = {
       id: crypto.randomUUID(),
-      member_id: currentUserId,
-      title: libraryBook.title,
-      author: libraryBook.author,
-      category: libraryBook.category,
+      member_id: selectedMemberId,
+      title: checkoutBook.title,
+      author: checkoutBook.author,
+      category: checkoutBook.category,
       pages_total: 200, // Default, user can update
       pages_read: 0,
       status: 'to-read',
       rating: 0,
       created_at: new Date().toISOString(),
-      source_library_book_id: libraryBook.id
+      source_library_book_id: checkoutBook.id
     }
     const updated = [newBook, ...books]
     setBooks(updated)
     localStorage.setItem('bayt-books-v1', JSON.stringify(updated))
+
+    // Close modal
+    setShowCheckoutModal(false)
+    setCheckoutBook(null)
+
     try {
       const { error } = await supabase.from('books').insert(newBook)
       if (error) console.error('Book checkout failed:', error)
@@ -836,8 +854,8 @@ export default function ReadingBooks() {
                         </span>
                       </div>
 
-                      <button onClick={() => checkoutLibraryBook(b)} style={{ ...primaryBtn, width: '100%', padding: '0.5rem', marginBottom: '0.5rem', background: C.blue }}>
-                        CHECKOUT & ADD TO MY READING
+                      <button onClick={() => openCheckoutModal(b)} style={{ ...primaryBtn, width: '100%', padding: '0.5rem', marginBottom: '0.5rem', background: C.blue }}>
+                        CHECKOUT & ADD TO READING
                       </button>
 
                       {b.url && (
@@ -878,6 +896,85 @@ export default function ReadingBooks() {
                 </div>
               )}
             </div>
+
+            {/* Checkout Modal */}
+            {showCheckoutModal && checkoutBook && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000
+              }}>
+                <div style={{
+                  background: C.white,
+                  borderRadius: '12px',
+                  padding: '2rem',
+                  maxWidth: '400px',
+                  width: '90%',
+                  border: `2px solid ${C.green}`
+                }}>
+                  <h2 style={{ margin: '0 0 1rem 0', color: C.green }}>📚 Who is checking out this book?</h2>
+                  <div style={{ background: C.cream, padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: `1px solid ${C.ruleLight}` }}>
+                    <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: C.text }}>{checkoutBook.title}</div>
+                    <div style={{ fontSize: '0.9rem', color: C.grey }}>by {checkoutBook.author}</div>
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: C.text }}>Select Family Member:</label>
+                    <select
+                      value={selectedMemberId}
+                      onChange={e => setSelectedMemberId(e.target.value)}
+                      style={{
+                        ...inputStyle,
+                        width: '100%',
+                        padding: '0.75rem',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      {MEMBERS.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                      onClick={confirmCheckout}
+                      style={{
+                        ...primaryBtn,
+                        flex: 1,
+                        padding: '0.75rem',
+                        background: C.green
+                      }}
+                    >
+                      CONFIRM CHECKOUT
+                    </button>
+                    <button
+                      onClick={() => setShowCheckoutModal(false)}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        background: 'none',
+                        border: `1px solid ${C.rule}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontFamily: F_MONO,
+                        fontSize: '0.75rem',
+                        color: C.grey
+                      }}
+                    >
+                      CANCEL
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Completed Books Section */}
             <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `2px solid ${C.ruleLight}` }}>
