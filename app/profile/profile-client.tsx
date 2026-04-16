@@ -3,6 +3,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import ProfileWizard from '@/app/components/profile-wizard'
+import ProfileCompletenessMeter from '@/app/components/profile-completeness-meter'
 
 const C = {
   green:     '#1a3d28',
@@ -45,15 +47,18 @@ export default function UserProfile({ memberId, isOwnProfile, isParent }: { memb
   // Forms
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [profForm, setProfForm] = useState({ display_name: '', bio: '', current_focus: '', interests: '', love_language: '' })
-  
+
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskForm, setTaskForm] = useState({ title: '', description: '', tag: 'project', due_date: '', priority: 'normal' })
-  
+
   const [showNoteForm, setShowNoteForm] = useState(false)
   const [noteForm, setNoteForm] = useState({ title: '', content: '', type: 'note' })
 
   const [showKpiForm, setShowKpiForm] = useState(false)
   const [kpiForm, setKpiForm] = useState({ overall_score: 5, wins: '', improvements: '' })
+
+  // Profile Wizard
+  const [showProfileWizard, setShowProfileWizard] = useState(false)
 
   const supabase = createClient()
 
@@ -106,6 +111,29 @@ export default function UserProfile({ memberId, isOwnProfile, isParent }: { memb
     localStorage.setItem(`bayt-profile-${memberId}-v1`, JSON.stringify(updated))
     setIsEditingProfile(false)
     try { await supabase.from('user_profiles').upsert({ id: profile.id || crypto.randomUUID(), ...updated }) } catch(e) {}
+  }
+
+  const handleWizardComplete = async (wizardData: any) => {
+    try {
+      const updated = {
+        ...profile,
+        display_name: profile.display_name || wizardData.avatarEmoji,
+        avatar_emoji: wizardData.avatarEmoji,
+        bio: wizardData.bio || profile.bio,
+        current_focus: wizardData.currentFocus || profile.current_focus,
+        interests: wizardData.interests,
+        love_language: wizardData.loveLanguage || profile.love_language,
+      }
+      setProfile(updated)
+      localStorage.setItem(`bayt-profile-${memberId}-v1`, JSON.stringify(updated))
+      try {
+        await supabase.from('user_profiles').upsert({ id: profile.id || crypto.randomUUID(), ...updated })
+      } catch(e) { console.error('Error saving profile:', e) }
+      setShowProfileWizard(false)
+    } catch (err) {
+      console.error('Wizard completion error:', err)
+      throw err
+    }
   }
 
   const addTask = async () => {
@@ -164,18 +192,34 @@ export default function UserProfile({ memberId, isOwnProfile, isParent }: { memb
     <div style={{ maxWidth: '1000px', margin: '0 auto', fontFamily: F_SANS }}>
 
       {isNewUser && (
-        <div style={{ background: 'linear-gradient(135deg, #f0e4c0 0%, #faf8f2 100%)', border: `2px solid ${C.gold}`, borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ fontSize: '2rem', flexShrink: 0 }}>🎉</div>
-          <div style={{ flex: 1 }}>
-            <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: C.text, fontWeight: 600 }}>Welcome to Bayt OS!</h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: C.green }}>Complete your profile to unlock more features and show your personality to the family.</p>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ background: 'linear-gradient(135deg, #f0e4c0 0%, #faf8f2 100%)', border: `2px solid ${C.gold}`, borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ fontSize: '2rem', flexShrink: 0 }}>🎉</div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: C.text, fontWeight: 600 }}>Welcome to Bayt OS!</h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: C.green }}>Complete your profile to unlock more features and show your personality to the family.</p>
+            </div>
+            <button
+              onClick={() => setShowProfileWizard(true)}
+              style={{ background: C.green, color: C.white, border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontFamily: F_MONO, fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
+            >
+              START SETUP
+            </button>
           </div>
-          <button
-            onClick={() => setIsEditingProfile(true)}
-            style={{ background: C.green, color: C.white, border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontFamily: F_MONO, fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
-          >
-            COMPLETE PROFILE
-          </button>
+          <ProfileCompletenessMeter
+            profile={{
+              fullName: profile?.display_name,
+              email: profile?.email,
+              avatarEmoji: profile?.avatar_emoji,
+              bio: profile?.bio,
+              currentFocus: profile?.current_focus,
+              interests: profile?.interests,
+              loveLanguage: profile?.love_language,
+            }}
+            onStartWizard={() => setShowProfileWizard(true)}
+            showLabel={true}
+            compact={false}
+          />
         </div>
       )}
 
@@ -559,6 +603,22 @@ export default function UserProfile({ memberId, isOwnProfile, isParent }: { memb
         )}
 
       </main>
+
+      {/* Profile Wizard Modal */}
+      {showProfileWizard && (
+        <ProfileWizard
+          onComplete={handleWizardComplete}
+          initialData={{
+            avatarEmoji: profile?.avatar_emoji || '👤',
+            bio: profile?.bio || '',
+            currentFocus: profile?.current_focus || '',
+            interests: profile?.interests || [],
+            loveLanguage: profile?.love_language || '',
+          }}
+          memberId={memberId}
+          onDismiss={() => setShowProfileWizard(false)}
+        />
+      )}
     </div>
   )
 }

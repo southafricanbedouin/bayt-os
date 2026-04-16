@@ -35,29 +35,151 @@ const MEMBERS = [
 
 const CATEGORIES = ['Islamic', 'Fiction', 'Non-fiction', 'Biography', 'Science', 'Children', 'Other']
 const STATUSES = ['to-read', 'reading', 'completed']
+const AGE_GROUPS = ['3-5', '6-8', '9-11', '12-14', '15+', 'All Ages']
+const RESOURCE_TYPES = ['Book', 'Magazine', 'Article', 'Story', 'Audio', 'Interactive']
+
+const CURATED_RESOURCES = [
+  {
+    id: 'qnl-main',
+    title: 'Qatar National Library - Online Resources',
+    url: 'https://www.qnl.qa/en/explore/online-resources',
+    type: 'Library',
+    category: 'Non-fiction',
+    categories: ['Islamic', 'Fiction', 'Non-fiction', 'Children'],
+    ageGroups: ['All Ages'],
+    description: 'Official QNL platform with thousands of books, magazines, and resources',
+    icon: '📚'
+  },
+  {
+    id: 'pressreader',
+    title: 'PressReader (via QNL)',
+    url: 'https://www-pressreader-com.eres.qnl.qa/catalog',
+    type: 'Magazines & Newspapers',
+    category: 'Non-fiction',
+    categories: ['Non-fiction'],
+    ageGroups: ['15+', 'All Ages'],
+    description: 'Access to newspapers, magazines, and journals worldwide',
+    icon: '📰'
+  },
+  {
+    id: 'creativebug',
+    title: 'CreativeBug (via QNL)',
+    url: 'https://www-creativebug-com.eres.qnl.qa/lib/qnl',
+    type: 'Learning',
+    category: 'Science',
+    categories: ['Science'],
+    ageGroups: ['6-8', '9-11', '12-14', '15+'],
+    description: 'Creative learning with art, craft, and design classes',
+    icon: '🎨'
+  },
+  {
+    id: 'unite-literacy',
+    title: 'Unite for Literacy',
+    url: 'https://www.uniteforliteracy.com/free-books-online/home',
+    type: 'Free Books',
+    category: 'Children',
+    categories: ['Fiction', 'Children'],
+    ageGroups: ['3-5', '6-8', '9-11'],
+    description: 'Free bilingual children\'s books - perfect for young readers',
+    icon: '📖'
+  },
+  {
+    id: 'bookflix',
+    title: 'Bookflix (Scholastic)',
+    url: 'https://bookflix.digital.scholastic.com/home?authCtx=',
+    type: 'Interactive Stories',
+    category: 'Children',
+    categories: ['Fiction', 'Children'],
+    ageGroups: ['3-5', '6-8', '9-11'],
+    description: 'Animated book companion with video and interactive activities',
+    icon: '🎬'
+  }
+]
 
 export default function ReadingBooks() {
   const [activeTab, setActiveTab] = useState('current')
   const [loading, setLoading] = useState(true)
   const [books, setBooks] = useState<any[]>([])
   const [sessions, setSessions] = useState<any[]>([])
+  const [resources, setResources] = useState<any[]>(CURATED_RESOURCES)
+  const [libraryBooks, setLibraryBooks] = useState<any[]>([])
+  const [currentUserId, setCurrentUserId] = useState('yahya') // TODO: Get from auth
 
   const [showBookForm, setShowBookForm] = useState(false)
   const [bookForm, setBookForm] = useState({ member_id: 'yahya', title: '', author: '', category: 'Fiction', pages_total: '', status: 'to-read' })
-  
+
   const [logForm, setLogForm] = useState<Record<string, { pages: string, duration: string, notes: string }>>({})
+
+  // Library filter states
+  const [showResourceForm, setShowResourceForm] = useState(false)
+  const [resourceForm, setResourceForm] = useState({ title: '', author: '', type: 'Book', url: '', driveUrl: '', category: 'Other', ageGroups: ['All Ages'], addedBy: 'Family' })
+  const [librarySearch, setLibrarySearch] = useState('')
+  const [libraryFilters, setLibraryFilters] = useState({ category: 'All', ageGroup: 'All Ages' })
+
+  // Library books (family book collection)
+  const [showLibraryBookForm, setShowLibraryBookForm] = useState(false)
+  const [libraryBookForm, setLibraryBookForm] = useState({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+  const [editingLibraryBookId, setEditingLibraryBookId] = useState<string | null>(null)
+  const [libraryBooksSearch, setLibraryBooksSearch] = useState('')
+  const [libraryBooksFilters, setLibraryBooksFilters] = useState({ category: 'All', fiction_nonfiction: 'All', age: 'All Ages' })
+
+  // Checkout modal state
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [checkoutBook, setCheckoutBook] = useState<any>(null)
+  const [selectedMemberId, setSelectedMemberId] = useState('yahya')
 
   const supabase = createClient()
 
   useEffect(() => {
     fetchData()
+    // Auto-sync localStorage books to Supabase on first load
+    syncLocalStorageBooksToSupabase()
   }, [])
+
+  const syncLocalStorageBooksToSupabase = async () => {
+    try {
+      // Check if we have books in localStorage
+      const localBooks = JSON.parse(localStorage.getItem('bayt-library-books-v1') || '[]')
+      if (localBooks.length === 0) return
+
+      // Check if Supabase already has books
+      const { data: existingBooks, error: checkErr } = await supabase.from('library_books').select('id').limit(1)
+      if (checkErr) {
+        console.log('Supabase table not ready yet, will retry on reload')
+        return
+      }
+
+      // If no books in Supabase, sync them
+      if (existingBooks && existingBooks.length === 0) {
+        for (const book of localBooks) {
+          try {
+            await supabase.from('library_books').insert({
+              id: book.id,
+              title: book.title,
+              author: book.author,
+              category: book.category,
+              fiction_nonfiction: book.fiction_nonfiction,
+              age: book.age,
+              url: book.url || null,
+              drive_url: book.driveUrl || null,
+              added_at: book.added_at || new Date().toISOString()
+            })
+          } catch (e) {
+            console.error('Failed to sync book:', book.title, e)
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Sync not critical, books will work from localStorage:', e)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
     try {
       const { data: bData, error: bErr } = await supabase.from('books').select('*').order('created_at', { ascending: false })
       const { data: sData, error: sErr } = await supabase.from('reading_sessions').select('*')
+      const { data: lbData, error: lbErr } = await supabase.from('library_books').select('*').order('created_at', { ascending: false })
 
       // Use Supabase as source of truth. Fall back to localStorage only if the query errors.
       if (!bErr && bData !== null) {
@@ -73,11 +195,19 @@ export default function ReadingBooks() {
       } else {
         setSessions(JSON.parse(localStorage.getItem('bayt-reading-sessions-v1') || '[]'))
       }
+
+      if (!lbErr && lbData !== null) {
+        setLibraryBooks(lbData)
+        localStorage.setItem('bayt-library-books-v1', JSON.stringify(lbData))
+      } else {
+        setLibraryBooks(JSON.parse(localStorage.getItem('bayt-library-books-v1') || '[]'))
+      }
     } catch (e) {
       console.error(e)
       // Network error — use cached data
       setBooks(JSON.parse(localStorage.getItem('bayt-books-v1') || '[]'))
       setSessions(JSON.parse(localStorage.getItem('bayt-reading-sessions-v1') || '[]'))
+      setLibraryBooks(JSON.parse(localStorage.getItem('bayt-library-books-v1') || '[]'))
     }
     setLoading(false)
   }
@@ -153,6 +283,132 @@ export default function ReadingBooks() {
     try { await supabase.from('books').update({ rating }).eq('id', id) } catch(e) {}
   }
 
+  const saveResource = async () => {
+    if (!resourceForm.title || (!resourceForm.url && !resourceForm.driveUrl)) return
+    const newResource = {
+      id: crypto.randomUUID(),
+      ...resourceForm,
+      created_at: new Date().toISOString()
+    }
+    const updated = [newResource, ...resources.filter(r => !r.id.startsWith('custom-') || r.id.substring(7) !== newResource.id)]
+    setResources(updated)
+    localStorage.setItem('bayt-resources-v1', JSON.stringify(updated))
+    setShowResourceForm(false)
+    setResourceForm({ title: '', author: '', type: 'Book', url: '', driveUrl: '', category: 'Other', ageGroups: ['All Ages'], addedBy: 'Family' })
+  }
+
+  const saveLibraryBook = async () => {
+    if (!libraryBookForm.title || !libraryBookForm.author) return
+
+    if (editingLibraryBookId) {
+      // Update existing book
+      const updated = libraryBooks.map(b => b.id === editingLibraryBookId ? { ...b, ...libraryBookForm, updated_at: new Date().toISOString() } : b)
+      setLibraryBooks(updated)
+      localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
+      setShowLibraryBookForm(false)
+      setEditingLibraryBookId(null)
+      setLibraryBookForm({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+      try {
+        const { error } = await supabase.from('library_books').update({ ...libraryBookForm, updated_at: new Date().toISOString() }).eq('id', editingLibraryBookId)
+        if (error) console.error('Library book update failed:', error)
+      } catch(e) { console.error('Library book update error:', e) }
+    } else {
+      // Create new book
+      const newBook = {
+        id: crypto.randomUUID(),
+        ...libraryBookForm,
+        added_at: new Date().toISOString()
+      }
+      const updated = [newBook, ...libraryBooks]
+      setLibraryBooks(updated)
+      localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
+      setShowLibraryBookForm(false)
+      setLibraryBookForm({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+      try {
+        const { error } = await supabase.from('library_books').insert(newBook)
+        if (error) console.error('Library book insert failed:', error)
+      } catch(e) { console.error('Library book insert error:', e) }
+    }
+  }
+
+  const openEditLibraryBook = (book: any) => {
+    setEditingLibraryBookId(book.id)
+    setLibraryBookForm({ title: book.title, author: book.author, category: book.category, fiction_nonfiction: book.fiction_nonfiction, age: book.age, url: book.url || '', driveUrl: book.drive_url || '' })
+    setShowLibraryBookForm(true)
+  }
+
+  const cancelEditLibraryBook = () => {
+    setEditingLibraryBookId(null)
+    setShowLibraryBookForm(false)
+    setLibraryBookForm({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+  }
+
+  const deleteLibraryBook = async (bookId: string) => {
+    if (!confirm('Are you sure you want to delete this book from the library?')) return
+    const updated = libraryBooks.filter(b => b.id !== bookId)
+    setLibraryBooks(updated)
+    localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
+    try {
+      const { error } = await supabase.from('library_books').delete().eq('id', bookId)
+      if (error) console.error('Library book delete failed:', error)
+    } catch(e) { console.error('Library book delete error:', e) }
+  }
+
+  const openCheckoutModal = (libraryBook: any) => {
+    setCheckoutBook(libraryBook)
+    setSelectedMemberId('yahya') // Reset to default
+    setShowCheckoutModal(true)
+  }
+
+  const confirmCheckout = async () => {
+    if (!checkoutBook || !selectedMemberId) return
+
+    // Create a book entry for the selected member
+    const newBook = {
+      id: crypto.randomUUID(),
+      member_id: selectedMemberId,
+      title: checkoutBook.title,
+      author: checkoutBook.author,
+      category: checkoutBook.category,
+      pages_total: 200, // Default, user can update
+      pages_read: 0,
+      status: 'to-read',
+      rating: 0,
+      created_at: new Date().toISOString(),
+      source_library_book_id: checkoutBook.id
+    }
+    const updated = [newBook, ...books]
+    setBooks(updated)
+    localStorage.setItem('bayt-books-v1', JSON.stringify(updated))
+
+    // Close modal
+    setShowCheckoutModal(false)
+    setCheckoutBook(null)
+
+    try {
+      const { error } = await supabase.from('books').insert(newBook)
+      if (error) console.error('Book checkout failed:', error)
+    } catch(e) { console.error('Book checkout error:', e) }
+  }
+
+  const filteredResources = resources.filter(r => {
+    const matchesSearch = (r.title?.toLowerCase() || '').includes(librarySearch.toLowerCase()) ||
+                          (r.author?.toLowerCase() || '').includes(librarySearch.toLowerCase()) ||
+                          (r.description?.toLowerCase() || '').includes(librarySearch.toLowerCase())
+    const matchesCategory = libraryFilters.category === 'All' || r.category === libraryFilters.category || r.categories?.includes(libraryFilters.category)
+    const matchesAge = libraryFilters.ageGroup === 'All Ages' || r.ageGroups?.includes(libraryFilters.ageGroup) || r.ageGroups?.includes('All Ages')
+    return matchesSearch && matchesCategory && matchesAge
+  })
+
+  const filteredLibraryBooks = libraryBooks.filter(b => {
+    const matchesSearch = (b.title?.toLowerCase() || '').includes(libraryBooksSearch.toLowerCase()) ||
+                          (b.author?.toLowerCase() || '').includes(libraryBooksSearch.toLowerCase())
+    const matchesCategory = libraryBooksFilters.category === 'All' || b.category === libraryBooksFilters.category
+    const matchesFiction = libraryBooksFilters.fiction_nonfiction === 'All' || b.fiction_nonfiction === libraryBooksFilters.fiction_nonfiction
+    const matchesAge = libraryBooksFilters.age === 'All Ages' || b.age === libraryBooksFilters.age
+    return matchesSearch && matchesCategory && matchesFiction && matchesAge
+  })
+
   const totalPagesThisMonth = sessions.filter(s => new Date(s.logged_at).getMonth() === new Date().getMonth()).reduce((acc, s) => acc + s.pages_read, 0)
   const booksCompletedThisMonth = books.filter(b => b.status === 'completed' && b.completed_at && new Date(b.completed_at).getMonth() === new Date().getMonth()).length
 
@@ -186,7 +442,7 @@ export default function ReadingBooks() {
       <div style={{ display: 'flex', background: C.forest, borderBottom: `1px solid ${C.ruleLight}` }}>
         {[
           { id: 'current', label: '📖 Currently Reading' },
-          { id: 'manage', label: '➕ Manage Books' },
+          { id: 'manage', label: '➕ Manage Reading' },
           { id: 'leaderboard', label: '🏆 Leaderboard' },
           { id: 'library', label: '📚 Family Library' }
         ].map(t => (
@@ -247,7 +503,7 @@ export default function ReadingBooks() {
         {activeTab === 'manage' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>Manage Books</h2>
+              <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>Manage Reading</h2>
               <button onClick={() => setShowBookForm(!showBookForm)} style={primaryBtn}>
                 {showBookForm ? 'CANCEL' : 'ADD NEW BOOK'}
               </button>
@@ -353,31 +609,397 @@ export default function ReadingBooks() {
 
         {activeTab === 'library' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>The Family Library</h2>
-              <div style={{ fontSize: '0.85rem', color: C.grey }}>All completed books</div>
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>📚 Family Reading Resources</h2>
+                <button onClick={() => setShowResourceForm(!showResourceForm)} style={primaryBtn}>
+                  {showResourceForm ? 'CANCEL' : 'ADD RESOURCE'}
+                </button>
+              </div>
+
+              {showResourceForm && (
+                <div style={{ background: C.cream, border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <input placeholder="Resource Title" value={resourceForm.title} onChange={e => setResourceForm({...resourceForm, title: e.target.value})} style={inputStyle} />
+                    <input placeholder="Author (optional)" value={resourceForm.author} onChange={e => setResourceForm({...resourceForm, author: e.target.value})} style={inputStyle} />
+                    <select value={resourceForm.type} onChange={e => setResourceForm({...resourceForm, type: e.target.value})} style={inputStyle}>
+                      {RESOURCE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <input placeholder="Web URL (if linking externally)" value={resourceForm.url} onChange={e => setResourceForm({...resourceForm, url: e.target.value})} style={inputStyle} />
+                    <input placeholder="Google Drive link (if storing in Drive)" value={resourceForm.driveUrl} onChange={e => setResourceForm({...resourceForm, driveUrl: e.target.value})} style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <select value={resourceForm.category} onChange={e => setResourceForm({...resourceForm, category: e.target.value})} style={inputStyle}>
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {AGE_GROUPS.map(ag => (
+                        <label key={ag} style={{ display: 'flex', alignItems: 'center', fontSize: '0.8rem', gap: '0.3rem', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={resourceForm.ageGroups.includes(ag)} onChange={e => {
+                            if (e.target.checked) {
+                              setResourceForm({...resourceForm, ageGroups: [...resourceForm.ageGroups, ag]})
+                            } else {
+                              setResourceForm({...resourceForm, ageGroups: resourceForm.ageGroups.filter(a => a !== ag)})
+                            }
+                          }} style={{ cursor: 'pointer' }} />
+                          {ag}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={saveResource} style={primaryBtn}>SAVE RESOURCE</button>
+                </div>
+              )}
+
+              {/* Search & Filters */}
+              <div style={{ background: C.forest, padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                  placeholder="Search resources..."
+                  value={librarySearch}
+                  onChange={e => setLibrarySearch(e.target.value)}
+                  style={{...inputStyle, flex: 1, minWidth: '200px', padding: '0.5rem'}}
+                />
+                <select value={libraryFilters.category} onChange={e => setLibraryFilters({...libraryFilters, category: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All">All Categories</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select value={libraryFilters.ageGroup} onChange={e => setLibraryFilters({...libraryFilters, ageGroup: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All Ages">All Ages</option>
+                  {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                </select>
+                <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.white, background: C.green, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
+                  {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''}
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-              {books.filter(b => b.status === 'completed').sort((a,b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime()).map(b => {
-                const member = MEMBERS.find(m => m.id === b.member_id)?.name
-                return (
-                  <div key={b.id} style={{ border: `1px solid ${b.rating === 5 ? C.gold : C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: b.rating === 5 ? C.goldPale : C.white }}>
-                    {b.rating === 5 && <div style={{ fontSize: '0.7rem', fontFamily: F_MONO, color: C.goldDim, marginBottom: '0.5rem', textTransform: 'uppercase' }}>⭐ Highly Recommended</div>}
-                    <div style={{ fontWeight: 600, fontSize: '1.1rem', color: C.text, marginBottom: '0.2rem' }}>{b.title}</div>
-                    <div style={{ fontSize: '0.85rem', color: C.grey, marginBottom: '1rem' }}>by {b.author}</div>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px dashed ${C.ruleLight}`, paddingTop: '1rem' }}>
-                      <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{b.category}</div>
-                      <div style={{ display: 'flex', gap: '2px' }}>
-                        {[1,2,3,4,5].map(star => <span key={star} style={{ color: star <= (b.rating || 0) ? C.goldDim : C.ruleLight, fontSize: '1rem' }}>★</span>)}
+            {/* Resources Grid */}
+            {filteredResources.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                {filteredResources.map(r => (
+                  <div key={r.id} style={{ border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: C.white, transition: 'all 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <div style={{ fontSize: '1.5rem' }}>{r.icon || '📖'}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: '1rem', color: C.text }}>{r.title}</div>
+                        {r.author && <div style={{ fontSize: '0.8rem', color: C.grey }}>by {r.author}</div>}
                       </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: C.grey, marginTop: '0.5rem', textAlign: 'right' }}>Read by {member}</div>
+
+                    {r.description && (
+                      <div style={{ fontSize: '0.8rem', color: C.grey, marginBottom: '1rem', lineHeight: '1.4' }}>
+                        {r.description}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                      <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.white, background: C.green, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                        {r.type}
+                      </span>
+                      {r.category && <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                        {r.category}
+                      </span>}
+                      {r.categories && r.categories.slice(0, 2).map(cat => (
+                        <span key={cat} style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px' }}>
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+
+                    {r.ageGroups && (
+                      <div style={{ fontSize: '0.75rem', color: C.grey, marginBottom: '1rem', paddingBottom: '1rem', borderBottom: `1px dashed ${C.ruleLight}` }}>
+                        <span style={{ fontWeight: 600 }}>Age:</span> {r.ageGroups.join(', ')}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {r.url && (
+                        <a href={r.url} target="_blank" rel="noopener noreferrer" style={{
+                          ...primaryBtn,
+                          flex: 1,
+                          textAlign: 'center',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          padding: '0.5rem'
+                        }}>
+                          Open Link ↗
+                        </a>
+                      )}
+                      {r.driveUrl && (
+                        <a href={r.driveUrl} target="_blank" rel="noopener noreferrer" style={{
+                          ...primaryBtn,
+                          flex: 1,
+                          textAlign: 'center',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          padding: '0.5rem',
+                          background: C.blue
+                        }}>
+                          Drive ↗
+                        </a>
+                      )}
+                    </div>
+
+                    {r.addedBy && <div style={{ fontSize: '0.65rem', color: C.grey, marginTop: '0.5rem', textAlign: 'right', fontStyle: 'italic' }}>
+                      Added by {r.addedBy}
+                    </div>}
                   </div>
-                )
-              })}
-              {books.filter(b => b.status === 'completed').length === 0 && <div style={{ ...emptyState, gridColumn: '1 / -1' }}>The library is waiting. Finish your first book!</div>}
+                ))}
+              </div>
+            ) : (
+              <div style={{ ...emptyState, gridColumn: '1 / -1' }}>
+                No resources match your filters. Try adjusting your search or filters!
+              </div>
+            )}
+
+            {/* Family Library Books Section */}
+            <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `2px solid ${C.ruleLight}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>📖 Family Book Collection</h2>
+                {!showLibraryBookForm ? (
+                  <button onClick={() => setShowLibraryBookForm(true)} style={primaryBtn}>
+                    ADD BOOK
+                  </button>
+                ) : (
+                  <button onClick={cancelEditLibraryBook} style={{ ...primaryBtn, background: C.grey }}>
+                    CANCEL
+                  </button>
+                )}
+              </div>
+
+              {showLibraryBookForm && (
+                <div style={{ background: C.cream, border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem' }}>
+                  <h3 style={{ margin: '0 0 1rem 0', color: C.green }}>
+                    {editingLibraryBookId ? '✏️ Edit Book' : '➕ Add New Book'}
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <input placeholder="Book Title" value={libraryBookForm.title} onChange={e => setLibraryBookForm({...libraryBookForm, title: e.target.value})} style={inputStyle} />
+                    <input placeholder="Author" value={libraryBookForm.author} onChange={e => setLibraryBookForm({...libraryBookForm, author: e.target.value})} style={inputStyle} />
+                    <select value={libraryBookForm.fiction_nonfiction} onChange={e => setLibraryBookForm({...libraryBookForm, fiction_nonfiction: e.target.value})} style={inputStyle}>
+                      <option value="Fiction">Fiction</option>
+                      <option value="Non-Fiction">Non-Fiction</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <select value={libraryBookForm.category} onChange={e => setLibraryBookForm({...libraryBookForm, category: e.target.value})} style={inputStyle}>
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select value={libraryBookForm.age} onChange={e => setLibraryBookForm({...libraryBookForm, age: e.target.value})} style={inputStyle}>
+                      {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                    </select>
+                    <input placeholder="URL (optional)" value={libraryBookForm.url} onChange={e => setLibraryBookForm({...libraryBookForm, url: e.target.value})} style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <input placeholder="Google Drive link (optional)" value={libraryBookForm.driveUrl} onChange={e => setLibraryBookForm({...libraryBookForm, driveUrl: e.target.value})} style={inputStyle} />
+                  </div>
+                  <button onClick={saveLibraryBook} style={primaryBtn}>
+                    {editingLibraryBookId ? 'UPDATE BOOK' : 'SAVE BOOK'}
+                  </button>
+                </div>
+              )}
+
+              {/* Search & Filters for Library Books */}
+              <div style={{ background: C.forest, padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                  placeholder="Search books..."
+                  value={libraryBooksSearch}
+                  onChange={e => setLibraryBooksSearch(e.target.value)}
+                  style={{...inputStyle, flex: 1, minWidth: '200px', padding: '0.5rem'}}
+                />
+                <select value={libraryBooksFilters.category} onChange={e => setLibraryBooksFilters({...libraryBooksFilters, category: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All">All Categories</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select value={libraryBooksFilters.fiction_nonfiction} onChange={e => setLibraryBooksFilters({...libraryBooksFilters, fiction_nonfiction: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All">All Types</option>
+                  <option value="Fiction">Fiction</option>
+                  <option value="Non-Fiction">Non-Fiction</option>
+                </select>
+                <select value={libraryBooksFilters.age} onChange={e => setLibraryBooksFilters({...libraryBooksFilters, age: e.target.value})} style={{...inputStyle, padding: '0.5rem'}}>
+                  <option value="All Ages">All Ages</option>
+                  {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                </select>
+                <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.white, background: C.green, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
+                  {filteredLibraryBooks.length} book{filteredLibraryBooks.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+
+              {/* Library Books Grid */}
+              {filteredLibraryBooks.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+                  {filteredLibraryBooks.map(b => (
+                    <div key={b.id} style={{ border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: C.white, position: 'relative' }}>
+                      <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                        <button onClick={() => openEditLibraryBook(b)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', background: C.blue, color: C.white, border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                          ✏️ EDIT
+                        </button>
+                        <button onClick={() => deleteLibraryBook(b.id)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', background: C.orange, color: C.white, border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                          🗑️ DELETE
+                        </button>
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '1.1rem', color: C.text, marginBottom: '0.2rem' }}>{b.title}</div>
+                      <div style={{ fontSize: '0.85rem', color: C.grey, marginBottom: '1rem' }}>by {b.author}</div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                        <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                          {b.fiction_nonfiction}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '3px', textTransform: 'uppercase' }}>
+                          {b.category}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', fontFamily: F_MONO, color: C.grey, background: C.ruleLight, padding: '0.2rem 0.5rem', borderRadius: '3px' }}>
+                          Age {b.age}
+                        </span>
+                      </div>
+
+                      <button onClick={() => openCheckoutModal(b)} style={{ ...primaryBtn, width: '100%', padding: '0.5rem', marginBottom: '0.5rem', background: C.blue }}>
+                        CHECKOUT & ADD TO READING
+                      </button>
+
+                      {b.url && (
+                        <a href={b.url} target="_blank" rel="noopener noreferrer" style={{
+                          display: 'block',
+                          textAlign: 'center',
+                          padding: '0.5rem',
+                          fontSize: '0.75rem',
+                          border: `1px solid ${C.rule}`,
+                          borderRadius: '4px',
+                          color: C.blue,
+                          textDecoration: 'none'
+                        }}>
+                          View Online ↗
+                        </a>
+                      )}
+                      {b.driveUrl && (
+                        <a href={b.driveUrl} target="_blank" rel="noopener noreferrer" style={{
+                          display: 'block',
+                          textAlign: 'center',
+                          padding: '0.5rem',
+                          fontSize: '0.75rem',
+                          border: `1px solid ${C.rule}`,
+                          borderRadius: '4px',
+                          color: C.blue,
+                          textDecoration: 'none',
+                          marginTop: '0.3rem'
+                        }}>
+                          Google Drive ↗
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ ...emptyState, marginBottom: '3rem' }}>
+                  No books match your filters. Try adjusting your search!
+                </div>
+              )}
+            </div>
+
+            {/* Checkout Modal */}
+            {showCheckoutModal && checkoutBook && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000
+              }}>
+                <div style={{
+                  background: C.white,
+                  borderRadius: '12px',
+                  padding: '2rem',
+                  maxWidth: '400px',
+                  width: '90%',
+                  border: `2px solid ${C.green}`
+                }}>
+                  <h2 style={{ margin: '0 0 1rem 0', color: C.green }}>📚 Who is checking out this book?</h2>
+                  <div style={{ background: C.cream, padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: `1px solid ${C.ruleLight}` }}>
+                    <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: C.text }}>{checkoutBook.title}</div>
+                    <div style={{ fontSize: '0.9rem', color: C.grey }}>by {checkoutBook.author}</div>
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: C.text }}>Select Family Member:</label>
+                    <select
+                      value={selectedMemberId}
+                      onChange={e => setSelectedMemberId(e.target.value)}
+                      style={{
+                        ...inputStyle,
+                        width: '100%',
+                        padding: '0.75rem',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      {MEMBERS.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                      onClick={confirmCheckout}
+                      style={{
+                        ...primaryBtn,
+                        flex: 1,
+                        padding: '0.75rem',
+                        background: C.green
+                      }}
+                    >
+                      CONFIRM CHECKOUT
+                    </button>
+                    <button
+                      onClick={() => setShowCheckoutModal(false)}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        background: 'none',
+                        border: `1px solid ${C.rule}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontFamily: F_MONO,
+                        fontSize: '0.75rem',
+                        color: C.grey
+                      }}
+                    >
+                      CANCEL
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Completed Books Section */}
+            <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `2px solid ${C.ruleLight}` }}>
+              <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 300, color: C.text }}>📖 Family's Completed Books</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                {books.filter(b => b.status === 'completed').sort((a,b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime()).map(b => {
+                  const member = MEMBERS.find(m => m.id === b.member_id)?.name
+                  return (
+                    <div key={b.id} style={{ border: `1px solid ${b.rating === 5 ? C.gold : C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: b.rating === 5 ? C.goldPale : C.white }}>
+                      {b.rating === 5 && <div style={{ fontSize: '0.7rem', fontFamily: F_MONO, color: C.goldDim, marginBottom: '0.5rem', textTransform: 'uppercase' }}>⭐ Highly Recommended</div>}
+                      <div style={{ fontWeight: 600, fontSize: '1.1rem', color: C.text, marginBottom: '0.2rem' }}>{b.title}</div>
+                      <div style={{ fontSize: '0.85rem', color: C.grey, marginBottom: '1rem' }}>by {b.author}</div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px dashed ${C.ruleLight}`, paddingTop: '1rem' }}>
+                        <div style={{ fontSize: '0.75rem', fontFamily: F_MONO, color: C.green, background: C.cream, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{b.category}</div>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                          {[1,2,3,4,5].map(star => <span key={star} style={{ color: star <= (b.rating || 0) ? C.goldDim : C.ruleLight, fontSize: '1rem' }}>★</span>)}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: C.grey, marginTop: '0.5rem', textAlign: 'right' }}>Read by {member}</div>
+                    </div>
+                  )
+                })}
+                {books.filter(b => b.status === 'completed').length === 0 && <div style={{ ...emptyState, gridColumn: '1 / -1' }}>Finish reading books to see them here!</div>}
+              </div>
             </div>
           </div>
         )}

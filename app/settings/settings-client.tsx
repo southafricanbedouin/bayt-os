@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createUser } from './actions'
+import { createUser, updateUser, resetUserPassword, deleteUser, bulkImportUsers } from './actions'
 
 const C = {
   white: '#ffffff',
@@ -55,6 +55,13 @@ export default function SettingsClient({
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [profiles, setProfiles] = useState(allProfiles)
+  const [editingUser, setEditingUser] = useState<string | null>(null)
+  const [editFormData, setEditFormData] = useState({ fullName: '', email: '', relationship: 'son', avatarEmoji: '' })
+  const [resetPasswordUser, setResetPasswordUser] = useState<string | null>(null)
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null)
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
+  const [bulkImportData, setBulkImportData] = useState<string>('')
+  const [viewingActivityUser, setViewingActivityUser] = useState<string | null>(null)
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,14 +111,145 @@ export default function SettingsClient({
     }
   }
 
-  const handleDeleteUser = async (userId: string) => {
-    // Note: Delete functionality would require a server action
-    // For now, just show confirmation and prevent deletion
-    setMessage({
-      type: 'error',
-      text: 'User deletion requires additional confirmation. Contact support.',
+  const handleEditUser = (profile: any) => {
+    setEditFormData({
+      fullName: profile.full_name,
+      email: profile.email || '',
+      relationship: profile.relationship || 'son',
+      avatarEmoji: profile.avatar_emoji || '',
     })
-    setDeleteConfirm(null)
+    setEditingUser(profile.id)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingUser) return
+    setIsLoading(true)
+    setMessage(null)
+
+    try {
+      const result = await updateUser({
+        userId: editingUser,
+        fullName: editFormData.fullName,
+        email: editFormData.email || undefined,
+        relationship: editFormData.relationship,
+        avatarEmoji: editFormData.avatarEmoji || undefined,
+      })
+
+      if (result.success) {
+        // Update local profiles list
+        setProfiles(
+          profiles.map((p) =>
+            p.id === editingUser
+              ? {
+                  ...p,
+                  full_name: editFormData.fullName,
+                  relationship: editFormData.relationship,
+                }
+              : p
+          )
+        )
+        setMessage({ type: 'success', text: 'User updated successfully' })
+        setEditingUser(null)
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to update user' })
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'An unexpected error occurred' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (userId: string) => {
+    setIsLoading(true)
+    setMessage(null)
+
+    try {
+      const result = await resetUserPassword(userId)
+
+      if (result.success && result.tempPassword) {
+        setGeneratedPassword(result.tempPassword)
+        setResetPasswordUser(userId)
+        setMessage({
+          type: 'success',
+          text: 'Password reset. New temporary password generated below.',
+        })
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to reset password' })
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'An unexpected error occurred' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    setIsLoading(true)
+    setMessage(null)
+
+    try {
+      const result = await deleteUser(userId)
+
+      if (result.success) {
+        setProfiles(profiles.filter((p) => p.id !== userId))
+        setMessage({ type: 'success', text: 'User deleted successfully' })
+        setDeleteConfirm(null)
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to delete user' })
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'An unexpected error occurred' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleBulkImport = async () => {
+    if (!bulkImportData.trim()) {
+      setMessage({ type: 'error', text: 'Please paste CSV data' })
+      return
+    }
+
+    setIsLoading(true)
+    setMessage(null)
+
+    try {
+      // Parse CSV
+      const lines = bulkImportData.trim().split('\n')
+      const csvData = lines
+        .slice(1) // Skip header
+        .map((line) => {
+          const [fullName, relationship, email] = line.split(',').map((s) => s.trim())
+          return { fullName, relationship, email }
+        })
+
+      const result = await bulkImportUsers(csvData)
+
+      if (result.success) {
+        setMessage({
+          type: 'success',
+          text: `Imported ${result.created} users successfully`,
+        })
+        setBulkImportData('')
+        setIsBulkImportOpen(false)
+        // Refresh profiles - in real app would fetch updated list
+      } else if (result.created > 0) {
+        setMessage({
+          type: 'success',
+          text: `Imported ${result.created} users. ${result.failed} failed.`,
+        })
+      } else {
+        setMessage({
+          type: 'error',
+          text: result.error || `Import failed: ${result.failed} rows had errors`,
+        })
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'An unexpected error occurred' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const containerStyle: React.CSSProperties = {
@@ -270,9 +408,14 @@ export default function SettingsClient({
 
       <div style={headerStyle}>
         <h1 style={titleStyle}>MANAGE USERS</h1>
-        <button style={btnAddStyle} onClick={() => setIsModalOpen(true)}>
-          + ADD USER
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button style={btnAddStyle} onClick={() => setIsBulkImportOpen(true)}>
+            📤 BULK IMPORT
+          </button>
+          <button style={btnAddStyle} onClick={() => setIsModalOpen(true)}>
+            + ADD USER
+          </button>
+        </div>
       </div>
 
       {profiles.length === 0 ? (
@@ -311,23 +454,39 @@ export default function SettingsClient({
                       <button
                         style={btnDeleteStyle}
                         onClick={() => handleDeleteUser(profile.id)}
+                        disabled={isLoading}
                       >
-                        Confirm
+                        {isLoading ? 'Deleting...' : 'Confirm'}
                       </button>
                       <button
                         style={btnSecondaryStyle}
                         onClick={() => setDeleteConfirm(null)}
+                        disabled={isLoading}
                       >
                         Cancel
                       </button>
                     </div>
                   ) : (
-                    <button
-                      style={btnDeleteStyle}
-                      onClick={() => setDeleteConfirm(profile.id)}
-                    >
-                      Delete
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        style={{ ...btnSecondaryStyle, fontSize: '0.7rem', padding: '0.4rem 0.8rem' }}
+                        onClick={() => handleEditUser(profile)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        style={{ ...btnSecondaryStyle, fontSize: '0.7rem', padding: '0.4rem 0.8rem' }}
+                        onClick={() => handleResetPassword(profile.id)}
+                      >
+                        Reset Pwd
+                      </button>
+                      <button
+                        style={btnDeleteStyle}
+                        onClick={() => setDeleteConfirm(profile.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -402,6 +561,201 @@ export default function SettingsClient({
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      {/* Edit User Modal */}
+      <div
+        style={{
+          ...modalOverlayStyle,
+          display: editingUser ? 'flex' : 'none',
+        }}
+        onClick={() => setEditingUser(null)}
+        onKeyDown={(e) => e.key === 'Escape' && setEditingUser(null)}
+      >
+        <div
+          style={modalStyle}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+            EDIT USER
+          </h2>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSaveEdit()
+            }}
+          >
+            <div style={formGroupStyle}>
+              <label style={labelStyle}>Full Name *</label>
+              <input
+                type="text"
+                style={inputStyle}
+                value={editFormData.fullName}
+                onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
+              />
+            </div>
+
+            <div style={formGroupStyle}>
+              <label style={labelStyle}>Email *</label>
+              <input
+                type="email"
+                style={inputStyle}
+                value={editFormData.email}
+                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+              />
+            </div>
+
+            <div style={formGroupStyle}>
+              <label style={labelStyle}>Relationship *</label>
+              <select
+                style={selectStyle}
+                value={editFormData.relationship}
+                onChange={(e) => setEditFormData({ ...editFormData, relationship: e.target.value })}
+              >
+                {RELATIONSHIPS.map((rel) => (
+                  <option key={rel} value={rel}>
+                    {rel.charAt(0).toUpperCase() + rel.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={btnGroupStyle}>
+              <button
+                type="button"
+                style={btnSecondaryStyle}
+                onClick={() => setEditingUser(null)}
+              >
+                CANCEL
+              </button>
+              <button type="submit" style={btnAddStyle} disabled={isLoading}>
+                {isLoading ? 'SAVING...' : 'SAVE CHANGES'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Reset Password Modal */}
+      <div
+        style={{
+          ...modalOverlayStyle,
+          display: resetPasswordUser ? 'flex' : 'none',
+        }}
+        onClick={() => {
+          setResetPasswordUser(null)
+          setGeneratedPassword(null)
+        }}
+      >
+        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+            PASSWORD RESET
+          </h2>
+
+          {generatedPassword && (
+            <>
+              <p style={{ fontSize: '0.9rem', color: C.darkGray, marginBottom: '1rem' }}>
+                A temporary password has been generated. Share it with the user or ask them to
+                reset it on their first login.
+              </p>
+
+              <div
+                style={{
+                  backgroundColor: C.lightGray,
+                  padding: '1rem',
+                  borderRadius: '6px',
+                  marginBottom: '1.5rem',
+                  fontFamily: F_MONO,
+                  fontSize: '1rem',
+                  letterSpacing: '0.05em',
+                  color: C.black,
+                  wordBreak: 'break-all',
+                }}
+              >
+                {generatedPassword}
+              </div>
+
+              <button
+                style={btnAddStyle}
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedPassword)
+                  setMessage({ type: 'success', text: 'Password copied to clipboard' })
+                }}
+              >
+                📋 COPY PASSWORD
+              </button>
+
+              <div style={{ marginTop: '1rem' }}>
+                <button
+                  style={btnSecondaryStyle}
+                  onClick={() => {
+                    setResetPasswordUser(null)
+                    setGeneratedPassword(null)
+                  }}
+                >
+                  DONE
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Bulk Import Modal */}
+      <div
+        style={{
+          ...modalOverlayStyle,
+          display: isBulkImportOpen ? 'flex' : 'none',
+        }}
+        onClick={() => setIsBulkImportOpen(false)}
+      >
+        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+            BULK IMPORT USERS
+          </h2>
+
+          <p style={{ fontSize: '0.85rem', color: C.gray, marginBottom: '1rem' }}>
+            Paste CSV data with headers: Full Name, Relationship, Email
+          </p>
+
+          <textarea
+            style={{
+              ...inputStyle,
+              fontFamily: F_MONO,
+              minHeight: '200px',
+              fontSize: '0.85rem',
+            }}
+            value={bulkImportData}
+            onChange={(e) => setBulkImportData(e.target.value)}
+            placeholder="Full Name,Relationship,Email&#10;John Doe,son,john@example.com&#10;Jane Doe,daughter,jane@example.com"
+          />
+
+          <p style={{ fontSize: '0.75rem', color: C.gray, marginTop: '0.5rem', marginBottom: '1rem' }}>
+            Passwords will be generated automatically
+          </p>
+
+          <div style={btnGroupStyle}>
+            <button
+              type="button"
+              style={btnSecondaryStyle}
+              onClick={() => {
+                setIsBulkImportOpen(false)
+                setBulkImportData('')
+              }}
+            >
+              CANCEL
+            </button>
+            <button
+              type="button"
+              style={btnAddStyle}
+              onClick={handleBulkImport}
+              disabled={isLoading}
+            >
+              {isLoading ? 'IMPORTING...' : 'IMPORT USERS'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

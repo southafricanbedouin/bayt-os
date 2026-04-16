@@ -35,19 +35,23 @@ const CATEGORIES = [
 
 const REACTIONS = ['❤️', '🌟', '👍', '🤲']
 
-export default function FamilyForum() {
+interface FamilyForumProps {
+  currentUserId: string
+}
+
+export default function FamilyForum({ currentUserId }: FamilyForumProps) {
   const [tab, setTab] = useState('feed')
   const [loading, setLoading] = useState(true)
-  
+
   const [posts, setPosts] = useState<any[]>([])
   const [comments, setComments] = useState<any[]>([])
-  
+
   const [postForm, setPostForm] = useState({ category: 'general', title: '', content: '' })
   const [commentForm, setCommentForm] = useState<{ [postId: string]: string }>({})
   const [expandedPost, setExpandedPost] = useState<string | null>(null)
 
   const supabase = createClient()
-  const currentUser = 'yahya' // Mock current user
+  const currentUser = currentUserId
 
   useEffect(() => {
     fetchData()
