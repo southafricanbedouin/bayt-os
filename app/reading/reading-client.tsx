@@ -119,6 +119,7 @@ export default function ReadingBooks() {
   // Library books (family book collection)
   const [showLibraryBookForm, setShowLibraryBookForm] = useState(false)
   const [libraryBookForm, setLibraryBookForm] = useState({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+  const [editingLibraryBookId, setEditingLibraryBookId] = useState<string | null>(null)
   const [libraryBooksSearch, setLibraryBooksSearch] = useState('')
   const [libraryBooksFilters, setLibraryBooksFilters] = useState({ category: 'All', fiction_nonfiction: 'All', age: 'All Ages' })
 
@@ -253,20 +254,59 @@ export default function ReadingBooks() {
 
   const saveLibraryBook = async () => {
     if (!libraryBookForm.title || !libraryBookForm.author) return
-    const newBook = {
-      id: crypto.randomUUID(),
-      ...libraryBookForm,
-      added_at: new Date().toISOString()
+
+    if (editingLibraryBookId) {
+      // Update existing book
+      const updated = libraryBooks.map(b => b.id === editingLibraryBookId ? { ...b, ...libraryBookForm, updated_at: new Date().toISOString() } : b)
+      setLibraryBooks(updated)
+      localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
+      setShowLibraryBookForm(false)
+      setEditingLibraryBookId(null)
+      setLibraryBookForm({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+      try {
+        const { error } = await supabase.from('library_books').update({ ...libraryBookForm, updated_at: new Date().toISOString() }).eq('id', editingLibraryBookId)
+        if (error) console.error('Library book update failed:', error)
+      } catch(e) { console.error('Library book update error:', e) }
+    } else {
+      // Create new book
+      const newBook = {
+        id: crypto.randomUUID(),
+        ...libraryBookForm,
+        added_at: new Date().toISOString()
+      }
+      const updated = [newBook, ...libraryBooks]
+      setLibraryBooks(updated)
+      localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
+      setShowLibraryBookForm(false)
+      setLibraryBookForm({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+      try {
+        const { error } = await supabase.from('library_books').insert(newBook)
+        if (error) console.error('Library book insert failed:', error)
+      } catch(e) { console.error('Library book insert error:', e) }
     }
-    const updated = [newBook, ...libraryBooks]
-    setLibraryBooks(updated)
-    localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
+  }
+
+  const openEditLibraryBook = (book: any) => {
+    setEditingLibraryBookId(book.id)
+    setLibraryBookForm({ title: book.title, author: book.author, category: book.category, fiction_nonfiction: book.fiction_nonfiction, age: book.age, url: book.url || '', driveUrl: book.drive_url || '' })
+    setShowLibraryBookForm(true)
+  }
+
+  const cancelEditLibraryBook = () => {
+    setEditingLibraryBookId(null)
     setShowLibraryBookForm(false)
     setLibraryBookForm({ title: '', author: '', category: 'Fiction', fiction_nonfiction: 'Fiction', age: 'All Ages', url: '', driveUrl: '' })
+  }
+
+  const deleteLibraryBook = async (bookId: string) => {
+    if (!confirm('Are you sure you want to delete this book from the library?')) return
+    const updated = libraryBooks.filter(b => b.id !== bookId)
+    setLibraryBooks(updated)
+    localStorage.setItem('bayt-library-books-v1', JSON.stringify(updated))
     try {
-      const { error } = await supabase.from('library_books').insert(newBook)
-      if (error) console.error('Library book insert failed:', error)
-    } catch(e) { console.error('Library book insert error:', e) }
+      const { error } = await supabase.from('library_books').delete().eq('id', bookId)
+      if (error) console.error('Library book delete failed:', error)
+    } catch(e) { console.error('Library book delete error:', e) }
   }
 
   const checkoutLibraryBook = async (libraryBook: any) => {
@@ -660,13 +700,22 @@ export default function ReadingBooks() {
             <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `2px solid ${C.ruleLight}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h2 style={{ margin: 0, fontWeight: 300, color: C.text }}>📖 Family Book Collection</h2>
-                <button onClick={() => setShowLibraryBookForm(!showLibraryBookForm)} style={primaryBtn}>
-                  {showLibraryBookForm ? 'CANCEL' : 'ADD BOOK'}
-                </button>
+                {!showLibraryBookForm ? (
+                  <button onClick={() => setShowLibraryBookForm(true)} style={primaryBtn}>
+                    ADD BOOK
+                  </button>
+                ) : (
+                  <button onClick={cancelEditLibraryBook} style={{ ...primaryBtn, background: C.grey }}>
+                    CANCEL
+                  </button>
+                )}
               </div>
 
               {showLibraryBookForm && (
                 <div style={{ background: C.cream, border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem' }}>
+                  <h3 style={{ margin: '0 0 1rem 0', color: C.green }}>
+                    {editingLibraryBookId ? '✏️ Edit Book' : '➕ Add New Book'}
+                  </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <input placeholder="Book Title" value={libraryBookForm.title} onChange={e => setLibraryBookForm({...libraryBookForm, title: e.target.value})} style={inputStyle} />
                     <input placeholder="Author" value={libraryBookForm.author} onChange={e => setLibraryBookForm({...libraryBookForm, author: e.target.value})} style={inputStyle} />
@@ -687,7 +736,9 @@ export default function ReadingBooks() {
                   <div style={{ marginBottom: '1rem' }}>
                     <input placeholder="Google Drive link (optional)" value={libraryBookForm.driveUrl} onChange={e => setLibraryBookForm({...libraryBookForm, driveUrl: e.target.value})} style={inputStyle} />
                   </div>
-                  <button onClick={saveLibraryBook} style={primaryBtn}>SAVE BOOK</button>
+                  <button onClick={saveLibraryBook} style={primaryBtn}>
+                    {editingLibraryBookId ? 'UPDATE BOOK' : 'SAVE BOOK'}
+                  </button>
                 </div>
               )}
 
@@ -721,7 +772,15 @@ export default function ReadingBooks() {
               {filteredLibraryBooks.length > 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                   {filteredLibraryBooks.map(b => (
-                    <div key={b.id} style={{ border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: C.white }}>
+                    <div key={b.id} style={{ border: `1px solid ${C.ruleLight}`, borderRadius: '8px', padding: '1.5rem', background: C.white, position: 'relative' }}>
+                      <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                        <button onClick={() => openEditLibraryBook(b)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', background: C.blue, color: C.white, border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                          ✏️ EDIT
+                        </button>
+                        <button onClick={() => deleteLibraryBook(b.id)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', background: C.orange, color: C.white, border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                          🗑️ DELETE
+                        </button>
+                      </div>
                       <div style={{ fontWeight: 600, fontSize: '1.1rem', color: C.text, marginBottom: '0.2rem' }}>{b.title}</div>
                       <div style={{ fontSize: '0.85rem', color: C.grey, marginBottom: '1rem' }}>by {b.author}</div>
 
