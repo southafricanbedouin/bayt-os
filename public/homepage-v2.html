@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BaytOS v1.1 — Family Operating System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    :root {
+      --primary-dark: #1a3d28;
+      --primary-light: #2d5a3d;
+      --accent-gold: #c9a84c;
+      --accent-gold-light: #e8dcc8;
+      --surface-cream: #faf8f2;
+      --text-dark: #2c2c2c;
+      --text-muted: #6b6b6b;
+      --border-light: #e8e3d8;
+
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-12: 48px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background-color: var(--surface-cream);
+      color: var(--text-dark);
+    }
+
+    /* Layout Structure */
+    .app-container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background-color: var(--primary-dark);
+      color: var(--surface-cream);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar.mobile-hidden {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-header {
+      padding: var(--space-6);
+      border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .logo-subtitle {
+      font-size: 11px;
+      color: rgba(201, 168, 76, 0.7);
+      margin-top: var(--space-2);
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: var(--space-6) 0;
+      overflow-y: auto;
+    }
+
+    .nav-section {
+      margin-bottom: var(--space-8);
+    }
+
+    .nav-section-title {
+      padding: var(--space-3) var(--space-6);
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(201, 168, 76, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: var(--space-3) var(--space-6);
+      margin: 0 var(--space-3);
+      border-radius: 8px;
+      color: rgba(250, 248, 242, 0.8);
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background-color: rgba(201, 168, 76, 0.1);
+      color: var(--accent-gold);
+    }
+
+    .nav-item.active {
+      background-color: rgba(201, 168, 76, 0.15);
+      color: var(--accent-gold);
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: var(--space-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 240px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      background-color: var(--surface-cream);
+      border-bottom: 1px solid var(--border-light);
+      padding: var(--space-4) var(--space-8);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-6);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .search-input {
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      width: 200px;
+      font-size: 14px;
+      background-color: var(--surface-cream);
+      color: var(--text-dark);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .button {
+      padding: var(--space-2) var(--space-4);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      background-color: transparent;
+      color: var(--text-dark);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .button:hover {
+      background-color: var(--accent-gold-light);
+      color: var(--primary-dark);
+      border-color: var(--accent-gold);
+    }
+
+    .button-primary {
+      background-color: var(--primary-dark);
+      color: var(--accent-gold);
+      border-color: var(--primary-dark);
+    }
+
+    .button-primary:hover {
+      background-color: var(--primary-light);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-dark);
+    }
+
+    /* Content Area */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-8);
+    }
+
+    /* Section Title */
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: var(--space-6);
+      margin-top: var(--space-8);
+    }
+
+    .section-title:first-child {
+      margin-top: 0;
+    }
+
+    /* Family Members Grid */
+    .family-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-6);
+      margin-bottom: var(--space-12);
+    }
+
+    .member-card {
+      background-color: white;
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: var(--space-6);
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .member-card:hover {
+      border-color: var(--accent-gold);
+      box-shadow: 0 4px 12px rgba(42, 61, 40, 0.08);
+    }
+
+    .member-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin: 0 auto var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 20px;
+    }
+
+    .avatar-blue { background-color: #4a90e2; }
+    .avatar-pink { background-color: #d946a6; }
+    .avatar-green { background-color: #16a34a; }
+    .avatar-gold { background-color: #ca8a04; }
+
+    .member-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: var(--space-2);
+    }
+
+    .member-role {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-4);
+    }
+
+    .member-follow-btn {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      background-color: var(--primary-dark);
+      color: var(--accent-gold);
+      border: 1px solid var(--primary-dark);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .member-follow-btn:hover {
+      background-color: var(--accent-gold);
+      color: var(--primary-dark);
+    }
+
+    /* Modules Grid */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-6);
+    }
+
+    .module-card {
+      background-color: white;
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .module-card:hover {
+      border-color: var(--accent-gold);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(42, 61, 40, 0.1);
+    }
+
+    .module-icon-bg {
+      height: 120px;
+      background: linear-gradient(135deg, var(--accent-gold-light) 0%, rgba(201, 168, 76, 0.08) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .module-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .module-icon svg {
+      width: 100%;
+      height: 100%;
+      stroke: var(--primary-dark);
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .module-content {
+      padding: var(--space-4);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .module-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: var(--space-2);
+    }
+
+    .module-category {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-3);
+    }
+
+    .module-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .module-badge {
+      display: inline-block;
+      padding: var(--space-2) var(--space-3);
+      background-color: var(--accent-gold-light);
+      color: var(--primary-dark);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: var(--space-3);
+    }
+
+    .module-rating {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      .modules-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        transform: translateY(100%);
+      }
+
+      .sidebar.mobile-hidden {
+        transform: translateY(100%);
+      }
+
+      .sidebar.mobile-open {
+        transform: translateY(0);
+        height: auto;
+        max-height: 80vh;
+      }
+
+      .main-content {
+        margin-left: 0;
+        margin-bottom: 0;
+      }
+
+      .header {
+        padding: var(--space-4);
+        flex-wrap: wrap;
+      }
+
+      .header-controls {
+        width: 100%;
+        gap: var(--space-3);
+      }
+
+      .search-input {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .content {
+        padding: var(--space-6);
+      }
+
+      .family-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-4);
+      }
+
+      .modules-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-4);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header-title {
+        font-size: 18px;
+      }
+
+      .section-title {
+        font-size: 16px;
+      }
+
+      .content {
+        padding: var(--space-4);
+      }
+
+      .family-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modules-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .search-input {
+        width: 100%;
+      }
+
+      .button {
+        padding: var(--space-2) var(--space-3);
+        font-size: 12px;
+      }
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: var(--accent-gold);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: var(--primary-dark);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">بيت أوس</div>
+        <div class="logo-subtitle">BAYT OS — v0.1</div>
+        <div style="font-size: 11px; color: rgba(201, 168, 76, 0.5); margin-top: 4px;">Seedat Family — Doha</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- Core Section -->
+        <div class="nav-section">
+          <div class="nav-section-title">CORE</div>
+          <div class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">👨‍👩‍👧‍👦</span>
+            <span>Family</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">🔔</span>
+            <span>Notifications</span>
+          </div>
+        </div>
+
+        <!-- Systems Section -->
+        <div class="nav-section">
+          <div class="nav-section-title">SYSTEMS</div>
+          <div class="nav-item">
+            <span class="nav-icon">📚</span>
+            <span>Learning</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">💰</span>
+            <span>Economy</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">🎯</span>
+            <span>Goals</span>
+          </div>
+        </div>
+
+        <!-- Resources Section -->
+        <div class="nav-section">
+          <div class="nav-section-title">RESOURCES</div>
+          <div class="nav-item">
+            <span class="nav-icon">❓</span>
+            <span>Help</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span>Settings</span>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Overview</h1>
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="header-controls">
+          <input type="text" class="search-input" placeholder="Search...">
+          <button class="button">Filter</button>
+          <button class="button button-primary">Upgrade Pro</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Top Family Members -->
+        <h2 class="section-title">Top Family Members</h2>
+        <div class="family-grid">
+          <div class="member-card">
+            <div class="member-avatar avatar-blue">MS</div>
+            <div class="member-name">Muhammad Seedat</div>
+            <div class="member-role">Father</div>
+            <button class="member-follow-btn">Follow</button>
+          </div>
+
+          <div class="member-card">
+            <div class="member-avatar avatar-pink">RR</div>
+            <div class="member-name">Rania Ramirez</div>
+            <div class="member-role">Mother</div>
+            <button class="member-follow-btn">Follow</button>
+          </div>
+
+          <div class="member-card">
+            <div class="member-avatar avatar-green">Y</div>
+            <div class="member-name">Yahya</div>
+            <div class="member-role">Son</div>
+            <button class="member-follow-btn">Follow</button>
+          </div>
+
+          <div class="member-card">
+            <div class="member-avatar avatar-gold">I</div>
+            <div class="member-name">Isa</div>
+            <div class="member-role">Son</div>
+            <button class="member-follow-btn">Follow</button>
+          </div>
+        </div>
+
+        <!-- Life Systems -->
+        <h2 class="section-title">Life Systems</h2>
+        <div class="modules-grid">
+          <!-- Dashboard -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 10l9-7 9 7M5 12v8a2 2 0 002 2h10a2 2 0 002-2v-8" />
+                  <path d="M9 15h6v5H9z" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Dashboard</h3>
+              <p class="module-category">Family Hub</p>
+              <div class="module-meta">
+                <span>5 modules</span>
+                <span>4 weeks</span>
+              </div>
+              <span class="module-badge">Beginner</span>
+              <div class="module-rating">★ 4.9 (156)</div>
+            </div>
+          </div>
+
+          <!-- Reading -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                  <path d="M10 5v12" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Reading</h3>
+              <p class="module-category">Stories & Knowledge</p>
+              <div class="module-meta">
+                <span>8 modules</span>
+                <span>8 weeks</span>
+              </div>
+              <span class="module-badge">Intermediate</span>
+              <div class="module-rating">★ 4.7 (89)</div>
+            </div>
+          </div>
+
+          <!-- Economy -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" />
+                  <path d="M1 10h22" />
+                  <circle cx="18" cy="15" r="2" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Economy</h3>
+              <p class="module-category">Money & Finance</p>
+              <div class="module-meta">
+                <span>6 modules</span>
+                <span>6 weeks</span>
+              </div>
+              <span class="module-badge">Master</span>
+              <div class="module-rating">★ 4.8 (112)</div>
+            </div>
+          </div>
+
+          <!-- Goals -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                  <circle cx="12" cy="12" r="5" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Goals</h3>
+              <p class="module-category">Dreams & Targets</p>
+              <div class="module-meta">
+                <span>7 modules</span>
+                <span>7 weeks</span>
+              </div>
+              <span class="module-badge">Beginner</span>
+              <div class="module-rating">★ 4.6 (98)</div>
+            </div>
+          </div>
+
+          <!-- Council -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="5" r="2.5" />
+                  <circle cx="5" cy="14" r="2.5" />
+                  <circle cx="19" cy="14" r="2.5" />
+                  <path d="M12 8v3M5 16v2M19 16v2M7.5 13h9" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Council</h3>
+              <p class="module-category">Family Meetings</p>
+              <div class="module-meta">
+                <span>4 modules</span>
+                <span>4 weeks</span>
+              </div>
+              <span class="module-badge">Intermediate</span>
+              <div class="module-rating">★ 4.9 (143)</div>
+            </div>
+          </div>
+
+          <!-- Assessments -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v18h18" />
+                  <path d="M18 17V9M13 17v-3M8 17V5" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Assessments</h3>
+              <p class="module-category">Progress Tracking</p>
+              <div class="module-meta">
+                <span>3 modules</span>
+                <span>3 weeks</span>
+              </div>
+              <span class="module-badge">Master</span>
+              <div class="module-rating">★ 4.7 (76)</div>
+            </div>
+          </div>
+
+          <!-- Shopping -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1" fill="currentColor" />
+                  <circle cx="20" cy="21" r="1" fill="currentColor" />
+                  <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Shopping</h3>
+              <p class="module-category">Wishlists & Purchases</p>
+              <div class="module-meta">
+                <span>5 modules</span>
+                <span>5 weeks</span>
+              </div>
+              <span class="module-badge">Beginner</span>
+              <div class="module-rating">★ 4.5 (64)</div>
+            </div>
+          </div>
+
+          <!-- Transport -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.74v-3.2a2 2 0 00-1.5-1.94l-9.15-2.71a2 2 0 01-1.35-1.84v0a2 2 0 011.35-1.84l9.15-2.71A2 2 0 0122 3.46v3.2" />
+                  <path d="M2 8.5a4.5 4.5 0 007 3.87" />
+                  <path d="M2 15.5a4.5 4.5 0 007-3.87" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Transport</h3>
+              <p class="module-category">Travel & Movement</p>
+              <div class="module-meta">
+                <span>6 modules</span>
+                <span>6 weeks</span>
+              </div>
+              <span class="module-badge">Intermediate</span>
+              <div class="module-rating">★ 4.8 (97)</div>
+            </div>
+          </div>
+
+          <!-- Savings -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 14c0 2-3 4-7 4s-7-2-7-4" />
+                  <path d="M14 10c1-1 2-2 2-4 0-2-2-3-4-3-2 0-4 1-4 3 0 2 1 3 2 4" />
+                  <circle cx="6" cy="15" r="1" fill="currentColor" />
+                  <path d="M3 12h8" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Savings</h3>
+              <p class="module-category">Investments & Goals</p>
+              <div class="module-meta">
+                <span>7 modules</span>
+                <span>7 weeks</span>
+              </div>
+              <span class="module-badge">Master</span>
+              <div class="module-rating">★ 4.9 (134)</div>
+            </div>
+          </div>
+
+          <!-- Entrepreneurship -->
+          <div class="module-card">
+            <div class="module-icon-bg">
+              <div class="module-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" />
+                  <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+                  <path d="M12 11v4" />
+                </svg>
+              </div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Entrepreneurship</h3>
+              <p class="module-category">Business & Ideas</p>
+              <div class="module-meta">
+                <span>8 modules</span>
+                <span>8 weeks</span>
+              </div>
+              <span class="module-badge">Beginner</span>
+              <div class="module-rating">★ 4.7 (87)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('mobile-open');
+      sidebar.classList.toggle('mobile-hidden');
+    }
+
+    // Close sidebar when clicking on a nav item (mobile)
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          document.getElementById('sidebar').classList.remove('mobile-open');
+          document.getElementById('sidebar').classList.add('mobile-hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

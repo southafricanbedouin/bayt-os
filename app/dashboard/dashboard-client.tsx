@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import ExpensesTracker from './expenses-tracker'
 import { Sidebar, SIDEBAR_W } from '@/app/components/sidebar-layout'
 import PrayerWidget from './prayer-widget'
+import { HomepageGrid } from '@/app/components/homepage-grid'
 
 interface Profile {
   id: string
@@ -413,6 +414,11 @@ export default function DashboardClient({ profile, family, goals, userId }: Prop
                 ? `Bismillah — your family OS is live. ${profiledCount}/${family.length} profiles complete.`
                 : 'Bismillah — complete your family profiles to get started.'}
             </p>
+          </div>
+
+          {/* ── Homepage Grid (New Design) ───────────────────────────────────── */}
+          <div style={{ marginBottom:'2rem' }}>
+            <HomepageGrid family={family} userId={userId} />
           </div>
 
           {/* Hadith strip */}

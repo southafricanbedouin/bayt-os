@@ -6,7 +6,18 @@
       "Bash(npx create-next-app:*)",
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest init -d -y)",
-      "Bash(npx shadcn@latest add card badge dialog input textarea select table tabs sheet avatar progress separator dropdown-menu -y)"
+      "Bash(npx shadcn@latest add card badge dialog input textarea select table tabs sheet avatar progress separator dropdown-menu -y)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Read(//Users/mseedat/Downloads/**)",
+      "Bash(unzip -q apex-designer.zip)",
+      "Bash(rm -rf apex-designer)",
+      "Bash(unzip -o apex-designer.zip)",
+      "Read(//private/tmp/**)",
+      "Bash(unzip -o /Users/mseedat/Downloads/apex-designer.zip)",
+      "Bash(npm run *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(git add *)"
     ]
   }
 }
