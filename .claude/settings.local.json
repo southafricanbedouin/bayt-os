@@ -17,7 +17,16 @@
       "Bash(npm run *)",
       "mcp__Claude_Preview__preview_start",
       "Bash(pkill -f \"next dev\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "mcp__f8a623f6-0d36-4de0-8fea-0105e3d45567__deploy_to_vercel",
+      "Bash(vercel --version)",
+      "Bash(vercel deploy *)",
+      "Bash(npx vercel *)",
+      "mcp__f8a623f6-0d36-4de0-8fea-0105e3d45567__get_deployment_build_logs",
+      "Bash(git reset *)",
+      "Bash(git commit *)"
     ]
   }
 }
